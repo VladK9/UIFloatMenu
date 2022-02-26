@@ -1,3 +1,9 @@
+### About
+
+<p align="center">
+  <img src="https://github.com/VladK9/UIFloatMenu/blob/main/Assets/UIFloatMenu-Banner.png">
+</p>
+
 ## Navigate
 
 - [Features](#features)
@@ -9,8 +15,10 @@
 
 - Highly customizable
    - support dark/light theme
-   - cornerRadius
+   - corner radius
+   - blured background
    - width (iPad)
+   - various positions
 
    ### Item config
    
@@ -25,7 +33,7 @@
    - SegmentCell
    ```
    
-   Item color
+   Action item color
    ```swift
    - standard
    - clear
@@ -34,7 +42,7 @@
    - custom
    ```
     
-   Item Layout
+   Action item Layout
    ```swift
    - Icon_Title (Icon left, title right)
    - Title_Icon (Title left, Icon right)
