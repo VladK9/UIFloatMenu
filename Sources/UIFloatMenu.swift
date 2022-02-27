@@ -50,7 +50,7 @@ class UIFloatMenu {
             
             vc.view.addSubview(menuView)
             
-            let pan = UIPanGestureRecognizer(target: self, action: #selector(UIControlViewDrag(_:)))
+            let pan = UIPanGestureRecognizer(target: self, action: #selector(UIFloatMenuDrag(_:)))
             pan.maximumNumberOfTouches = 1
             pan.cancelsTouchesInView = true
             menuView.addGestureRecognizer(pan)
@@ -107,9 +107,8 @@ class UIFloatMenu {
         initY.removeAll()
     }
     
-    //MARK: - UIControlViewDrag
-    // MARK: - Test
-    @objc static private func UIControlViewDrag(_ sender: UIPanGestureRecognizer) {
+    //MARK: - UIFloatMenuDrag
+    @objc static private func UIFloatMenuDrag(_ sender: UIPanGestureRecognizer) {
         let appRect = UIApplication.shared.windows[0].bounds
         let topPadding = UIFloatMenuHelper.getPadding(.top)
         let bottomPadding = UIFloatMenuHelper.getPadding(.bottom)
