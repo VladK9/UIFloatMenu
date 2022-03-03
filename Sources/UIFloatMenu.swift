@@ -120,6 +120,8 @@ class UIFloatMenu {
         }
         
         switch sender.state {
+        case .began:
+            break
         case .changed:
             panChanged(sender)
         case .ended, .cancelled:
@@ -174,7 +176,7 @@ class UIFloatMenu {
     static private func panEnded(_ gesture: UIPanGestureRecognizer, dismissDragSize: CGFloat) {
         let velocity = gesture.velocity(in: gesture.view).y
         if ((gesture.view!.frame.origin.y+40) >= dismissDragSize) || (velocity > 180) {
-            NotificationCenter.default.post(name: NSNotification.Name("UIMenuClose"), object: nil)
+            NotificationCenter.default.post(name: NSNotification.Name("UIFloatMenuClose"), object: nil)
         } else {
             UIView.animate(withDuration: 0.2, animations: {
                 if let UIFloatMenu = currentVC.view.viewWithTag(queue.last!.uuid!) {
@@ -184,6 +186,7 @@ class UIFloatMenu {
         }
     }
     
+    // MARK: - correctPosition()
     static public func correctPosition(_ position: UIFloatMenuPresentStyle) -> UIFloatMenuPresentStyle {
         let device = UIDevice.current.userInterfaceIdiom
         
@@ -205,12 +208,6 @@ class UIFloatMenu {
         } else {
             return position
         }
-    }
-    
-    private enum presentPosition {
-        case prepare
-        case show
-        case close
     }
     
     // MARK: - closeMenu()

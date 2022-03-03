@@ -10,9 +10,6 @@ class UIFloatMenuSegmentCell: UITableViewCell {
     private var contentStackView: UIStackView = UIStackView()
     
     var items = [Any]()
-    var vc: UIViewController!
-    var selectedItem: Int!
-    var action: Selector!
     
     lazy var titleLabel: UILabel = {
         let label = UILabel()
@@ -23,12 +20,7 @@ class UIFloatMenuSegmentCell: UITableViewCell {
         return label
     }()
     
-    lazy var segmentView: UISegmentedControl = {
-        let segment = UISegmentedControl(items: items)
-        segment.selectedSegmentIndex = selectedItem
-        segment.addTarget(vc, action: action, for: .valueChanged)
-        return segment
-    }()
+    lazy var segmentView = UISegmentedControl(items: items)
     
     // MARK: init
     override init(style: UITableViewCell.CellStyle, reuseIdentifier: String?) {

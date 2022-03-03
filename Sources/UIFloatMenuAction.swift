@@ -5,6 +5,12 @@
 
 import UIKit
 
+//MARK: - heightStyle
+public enum heightStyle {
+    case standard
+    case compact
+}
+
 //MARK: - labelConfig
 public enum labelConfig {
     case config(fontSize: CGFloat = 15, fontWeight: UIFont.Weight = .semibold)
@@ -41,9 +47,10 @@ public enum itemSetup {
     - Parameter icon: Optional
     - Parameter title: Title
     - Parameter subtitle: Optional
-    - Parameter layout: Loyout of cell (**Title_Icon** or **Icon_Title**), Default: **.Title_Icon**.
+    - Parameter layout: Loyout of cell (**.Title_Icon**, **.Icon_Title**), Default: **.Title_Icon**.
+    - Parameter height: Height of cell (**.standard**,  **.compact**), Default: **.standard**.
     */
-    case ActionCell(icon: UIImage? = nil, title: String, subtitle: String = "", layout: cellLayout = .Title_Icon)
+    case ActionCell(icon: UIImage? = nil, title: String, subtitle: String = "", layout: cellLayout = .Title_Icon, height: heightStyle = .standard)
     
     /**
     UIFloatMenu: Title
@@ -65,7 +72,6 @@ public enum itemSetup {
     - Parameter icon: Optional
     - Parameter title: Title
     - Parameter label: Configuration of label (**fontSize**, **fontWeight**)
-    - Parameter type: Type of spacer (**.empty**, **.line**, **.divider**)
     */
     case InfoCell(icon: UIImage? = nil, title: String,
                   label: labelConfig = .config(fontSize: 15, fontWeight: .semibold))
@@ -88,7 +94,7 @@ public enum itemSetup {
     
     - Parameter icon: Optional
     - Parameter title: Title
-    - Parameter isOn: Is on at start
+    - Parameter isOn: Is On at start
     - Parameter tintColor: Tint color
     - Parameter action: Action for Switch
     */

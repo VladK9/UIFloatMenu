@@ -42,7 +42,7 @@ class UIFloatMenuController: UIViewController, UIGestureRecognizerDelegate {
     
     // MARK: - deinit
     deinit {
-        NotificationCenter.default.removeObserver(self, name: NSNotification.Name(rawValue: "UIMenuClose"), object: nil)
+        NotificationCenter.default.removeObserver(self, name: NSNotification.Name(rawValue: "UIFloatMenuClose"), object: nil)
     }
     
     // MARK: - viewDidLoad
@@ -57,7 +57,7 @@ class UIFloatMenuController: UIViewController, UIGestureRecognizerDelegate {
         tap.cancelsTouchesInView = false
         backgroundView.addGestureRecognizer(tap)
         
-        NotificationCenter.default.addObserver(self, selector: #selector(tapClose), name: NSNotification.Name(rawValue: "UIMenuClose"), object: nil)
+        NotificationCenter.default.addObserver(self, selector: #selector(tapClose), name: NSNotification.Name(rawValue: "UIFloatMenuClose"), object: nil)
     }
     
     // MARK: - viewDidAppear
@@ -111,7 +111,7 @@ class UIFloatMenuController: UIViewController, UIGestureRecognizerDelegate {
         })
         
         if closeDelegate != nil {
-            closeDelegate?.didCloseMenu()
+            closeDelegate?.UIFloatMenuDidCloseMenu()
         }
     }
     

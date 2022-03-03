@@ -147,11 +147,12 @@ class UIFloatMenuView: UIView, UITableViewDelegate, UITableViewDataSource {
         let row = itemsData[indexPath.item]
         
         switch row.item {
-        case .ActionCell(let icon, let title, let subtitle, let layout):
+        case .ActionCell(let icon, let title, let subtitle, let layout, let height):
             let cell = tableView.dequeueReusableCell(withIdentifier: "UIFloatMenuActionCell", for: indexPath) as! UIFloatMenuActionCell
             
             cell.itemColor = row.itemColor
             cell.itemLayout = layout
+            cell.itemHeight = height
             
             cell.iconImageView.image = icon
             
@@ -210,9 +211,8 @@ class UIFloatMenuView: UIView, UITableViewDelegate, UITableViewDataSource {
             cell.titleLabel.text = title
             
             cell.items = items
-            cell.selectedItem = selected
-            cell.action = action
-            cell.vc = currentVC
+            cell.segmentView.addTarget(currentVC, action: action, for: .valueChanged)
+            cell.segmentView.selectedSegmentIndex = selected
             
             return cell
         }
@@ -224,16 +224,16 @@ class UIFloatMenuView: UIView, UITableViewDelegate, UITableViewDataSource {
         
         if case .ActionCell = row.item {
             if textFieldDelegate != nil {
-                textFieldDelegate?.getTextFieldData(getTF_data())
+                textFieldDelegate?.UIFloatMenuGetTextFieldData(getTF_data())
             }
             
             if closeDelegate != nil {
-                closeDelegate?.didCloseMenu()
+                closeDelegate?.UIFloatMenuDidCloseMenu()
             }
             
             row.action!(row)
             if row.closeOnTap {
-                NotificationCenter.default.post(name: NSNotification.Name("UIMenuClose"), object: nil)
+                NotificationCenter.default.post(name: NSNotification.Name("UIFloatMenuClose"), object: nil)
             }
         }
     }
@@ -244,14 +244,14 @@ class UIFloatMenuView: UIView, UITableViewDelegate, UITableViewDataSource {
         
         let row = itemsData[indexPath.item]
         switch row.item {
-        case .InfoCell(_, _, _):
-            height = 36
+        case .ActionCell(_, _, _, _, let heightStyle):
+            height = (heightStyle == .standard ? 57 : 47)
         case .Title(_):
             height = 30
         case .Spacer(_):
             height = 10
-        case .ActionCell(_, _, _, _):
-            height = 57
+        case .InfoCell(_, _, _):
+            height = 36
         case .TextFieldCell(_, _, _, _, _, _):
             height = 57
         case .SwitchCell(_, _, _, _, _):

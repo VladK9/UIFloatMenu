@@ -123,6 +123,6 @@ class UIFloatMenuHeaderView: UIView {
     
     // MARK: tapClose
     @objc func tapClose(_ sender: UIPanGestureRecognizer) {
-        NotificationCenter.default.post(name: NSNotification.Name("UIMenuClose"), object: nil)
+        NotificationCenter.default.post(name: NSNotification.Name("UIFloatMenuClose"), object: nil)
     }
 }

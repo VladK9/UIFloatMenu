@@ -9,6 +9,7 @@ class UIFloatMenuActionCell: UITableViewCell {
     
     var itemColor: itemColor!
     var itemLayout: cellLayout!
+    var itemHeight: heightStyle!
     
     var initBackColor: UIColor!
     
@@ -119,16 +120,18 @@ class UIFloatMenuActionCell: UITableViewCell {
         
         contentStackView.translatesAutoresizingMaskIntoConstraints = false
         
+        let top_bottom: CGFloat = (itemHeight == .standard ? 10 : 7)
+        
         switch itemLayout {
-        case .Icon_Title:            
+        case .Icon_Title:
             if iconImageView.image != nil {
                 iconImageView.frame.origin.x = 10
             }
             
             NSLayoutConstraint.activate([
-                contentStackView.topAnchor.constraint(equalTo: backView.topAnchor, constant: 10),
+                contentStackView.topAnchor.constraint(equalTo: backView.topAnchor, constant: top_bottom),
                 contentStackView.leadingAnchor.constraint(equalTo: backView.leadingAnchor, constant: iconImageView.image != nil ? 40 : 10),
-                contentStackView.bottomAnchor.constraint(equalTo: backView.bottomAnchor, constant: -10),
+                contentStackView.bottomAnchor.constraint(equalTo: backView.bottomAnchor, constant: -top_bottom),
                 contentStackView.trailingAnchor.constraint(equalTo: backView.trailingAnchor, constant: -10)
             ])
             break
@@ -138,9 +141,9 @@ class UIFloatMenuActionCell: UITableViewCell {
             }
             
             NSLayoutConstraint.activate([
-                contentStackView.topAnchor.constraint(equalTo: backView.topAnchor, constant: 10),
+                contentStackView.topAnchor.constraint(equalTo: backView.topAnchor, constant: top_bottom),
                 contentStackView.leadingAnchor.constraint(equalTo: backView.leadingAnchor, constant: 10),
-                contentStackView.bottomAnchor.constraint(equalTo: backView.bottomAnchor, constant: -10),
+                contentStackView.bottomAnchor.constraint(equalTo: backView.bottomAnchor, constant: -top_bottom),
                 contentStackView.trailingAnchor.constraint(equalTo: backView.trailingAnchor, constant: iconImageView.image != nil ? -40 : -10)
             ])
             break

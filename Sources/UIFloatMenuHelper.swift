@@ -140,8 +140,8 @@ extension UIPanGestureRecognizer {
 
 extension UIView {
     
-    //MARK: - UIControlViewShadow()
-    func UIMenuShadow(offset: CGSize, color: UIColor, radius: CGFloat, opacity: Float) {
+    //MARK: - UIFloatMenuShadow()
+    func UIFloatMenuShadow(offset: CGSize, color: UIColor, radius: CGFloat, opacity: Float) {
         layer.masksToBounds = false
         layer.shadowOffset = offset
         layer.shadowColor = color.cgColor
@@ -149,8 +149,8 @@ extension UIView {
         layer.shadowOpacity = opacity
     }
     
-    //MARK: - UIControlViewRoundCorners()
-    func UIMenuRoundCorners(_ corners: UIRectCorner, radius: CGFloat) {
+    //MARK: - UIFloatMenuRoundCorners()
+    func UIFloatMenuRoundCorners(_ corners: UIRectCorner, radius: CGFloat) {
         if #available(iOS 11.0, *) {
             clipsToBounds = true
             layer.cornerRadius = radius
@@ -252,7 +252,7 @@ struct Layout {
         if screenSize == appSize {
              return .iPadFullscreen // Full screen
         }
-
+        
         let persent = CGFloat(appWidth / screenWidth) * 100.0
         
         if persent <= 55.0 && persent >= 45.0 {

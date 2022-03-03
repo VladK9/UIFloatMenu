@@ -48,6 +48,12 @@
    - Title_Icon (Title left, Icon right)
    ```
    
+   Action item height
+   ```swift
+   - standard
+   - compact
+   ```
+   
    Spacer type
    ```swift
    - empty
@@ -83,6 +89,7 @@ menu.header.title = "UIFloatMenu title"
 menu.header.subTitle = "UIFloatMenu subtitle"
 menu.header.showHeader = true
 menu.header.showLine = true
+menu.header.lineInset = 15
 menu.config.cornerRadius = 12
 menu.config.blurBackground = true
 menu.config.viewWidth_iPad = 350
@@ -96,7 +103,7 @@ menu.show(self)
 To `know when menu is closed`, set the delegate with protocol `UIFloatMenuCloseDelegate`:
 
 ```swift
-func didCloseMenu() {
+func UIFloatMenuDidCloseMenu() {
     print("didCloseMenu - MenuClosed")
 }
 ```
@@ -104,7 +111,7 @@ func didCloseMenu() {
 To get `UITextField data`, set the delegate with protocol `UIFloatMenuTextFieldDelegate`:
 
 ```swift
-func getTextFieldData(_ data: [String]) {
+func UIFloatMenuGetTextFieldData(_ data: [String]) {
     print("TextField -", data)
 }
 ```

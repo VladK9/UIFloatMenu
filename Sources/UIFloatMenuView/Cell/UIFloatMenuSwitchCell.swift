@@ -26,10 +26,7 @@ class UIFloatMenuSwitchCell: UITableViewCell {
         return imageView
     }()
     
-    lazy var switchView: UISwitch = {
-        let sw = UISwitch()
-        return sw
-    }()
+    lazy var switchView = UISwitch()
     
     // MARK: init
     override init(style: UITableViewCell.CellStyle, reuseIdentifier: String?) {

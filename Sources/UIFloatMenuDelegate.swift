@@ -11,7 +11,7 @@ public protocol UIFloatMenuCloseDelegate: AnyObject {
     /**
      UIFloatMenu: Called when pressed close button (or overlay) or swiped.
      */
-    func didCloseMenu()
+    func UIFloatMenuDidCloseMenu()
     
 }
 
@@ -23,6 +23,6 @@ public protocol UIFloatMenuTextFieldDelegate: AnyObject {
      
      - Returns: Text from all textfields in menu
      */
-    func getTextFieldData(_ data: [String])
+    func UIFloatMenuGetTextFieldData(_ data: [String])
     
 }
