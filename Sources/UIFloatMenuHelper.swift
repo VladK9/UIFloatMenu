@@ -108,6 +108,30 @@ class UIFloatMenuHelper {
         return backView
     }
     
+    // MARK: - correctPosition()
+    static func correctPosition(_ position: UIFloatMenuPresentStyle) -> UIFloatMenuPresentStyle {
+        let device = UIDevice.current.userInterfaceIdiom
+        
+        if device == .pad {
+            let layout = Layout.determineLayout()
+            
+            if layout == .iPadOneThirdScreen {
+                if case .center = position {
+                    return .center
+                }
+                return .default
+            }
+            return position
+        } else if device == .phone {
+            if case .center = position {
+                return .center
+            }
+            return .default
+        } else {
+            return position
+        }
+    }
+    
 }
 
 // MARK: - Detect gesture direction

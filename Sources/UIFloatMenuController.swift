@@ -16,8 +16,7 @@ class UIFloatMenuController: UIViewController, UIGestureRecognizerDelegate {
     public var config = UIFloatMenuConfig()
     public var actions = [UIFloatMenuAction]()
     
-    var closeDelegate: UIFloatMenuCloseDelegate?
-    var textFieldDelegate: UIFloatMenuTextFieldDelegate?
+    public var delegate = Delegates()
     
     lazy private var backgroundView = UIView()
     
@@ -83,8 +82,8 @@ class UIFloatMenuController: UIViewController, UIGestureRecognizerDelegate {
         menu.currentVC = currentVC
         menu.headerConfig = header
         menu.viewConfig = config
-        menu.closeDelegate = closeDelegate
-        menu.textFieldDelegate = textFieldDelegate
+        menu.delegate.close = delegate.close
+        menu.delegate.textField = delegate.textField
         menu.show(self, actions: actions)
     }
     
@@ -110,13 +109,9 @@ class UIFloatMenuController: UIViewController, UIGestureRecognizerDelegate {
             self.dismiss(animated: false, completion: nil)
         })
         
-        if closeDelegate != nil {
-            closeDelegate?.UIFloatMenuDidCloseMenu()
+        if delegate.close != nil {
+            delegate.close?.UIFloatMenuDidCloseMenu()
         }
-    }
-    
-    func gestureRecognizer(_ gestureRecognizer: UIGestureRecognizer, shouldRecognizeSimultaneouslyWith otherGestureRecognizer: UIGestureRecognizer) -> Bool {
-        return true
     }
     
     // MARK: - detect theme changes and windows resize
@@ -170,10 +165,6 @@ class UIFloatMenuController: UIViewController, UIGestureRecognizerDelegate {
                     }
                 }
             }
-        } else if traitCollection.horizontalSizeClass == .regular {
-            print("horizontalSizeClass-regular")
-        } else {
-            print("horizontalSizeClass-unspecified")
         }
     }
     
@@ -233,7 +224,7 @@ class UIFloatMenuController: UIViewController, UIGestureRecognizerDelegate {
                     if Orientation.isLandscape {
                         menuView.center = self.view.center
                     } else {
-                        menu.showTo(menuView, positions: menu.correctPosition((self.queue.last?.config.presentation)!))
+                        menu.showTo(menuView, positions: UIFloatMenuHelper.correctPosition((self.queue.last?.config.presentation)!))
                     }
                 }
             }

@@ -4,7 +4,6 @@
 //
 
 import UIKit
-import Foundation
 
 class UIFloatMenuView: UIView, UITableViewDelegate, UITableViewDataSource {
     
@@ -17,11 +16,10 @@ class UIFloatMenuView: UIView, UITableViewDelegate, UITableViewDataSource {
     
     private let space: CGFloat = 8
     
-    var closeDelegate: UIFloatMenuCloseDelegate?
-    var textFieldDelegate: UIFloatMenuTextFieldDelegate?
+    var delegate = Delegates()
     
     //MARK: - tableView
-    lazy var tableView : UITableView = {
+    lazy var tableView: UITableView = {
         let table = UITableView()
         table.tag = UIFloatMenuID.backViewID
         table.translatesAutoresizingMaskIntoConstraints = false
@@ -39,15 +37,14 @@ class UIFloatMenuView: UIView, UITableViewDelegate, UITableViewDataSource {
     
     //MARK: - Lifecycle
     public init(items: [UIFloatMenuAction], vc: UIViewController, header: UIFloatMenuHeaderConfig, config: UIFloatMenuConfig,
-                closeDelegate: UIFloatMenuCloseDelegate?, textFieldDelegate: UIFloatMenuTextFieldDelegate?) {
+                delegate: Delegates) {
         super.init(frame: CGRect.zero)
         
         self.currentVC = vc
         self.itemsData = items
         self.config = config
         self.headerConfig = header
-        self.closeDelegate = closeDelegate
-        self.textFieldDelegate = textFieldDelegate
+        self.delegate = delegate
         
         backgroundColor = .clear
         
@@ -223,12 +220,12 @@ class UIFloatMenuView: UIView, UITableViewDelegate, UITableViewDataSource {
         let row = itemsData[indexPath.item]
         
         if case .ActionCell = row.item {
-            if textFieldDelegate != nil {
-                textFieldDelegate?.UIFloatMenuGetTextFieldData(getTF_data())
+            if delegate.textField != nil {
+                delegate.textField?.UIFloatMenuGetTextFieldData(getTF_data())
             }
             
-            if closeDelegate != nil {
-                closeDelegate?.UIFloatMenuDidCloseMenu()
+            if delegate.close != nil {
+                delegate.close?.UIFloatMenuDidCloseMenu()
             }
             
             row.action!(row)
@@ -269,15 +266,15 @@ class UIFloatMenuView: UIView, UITableViewDelegate, UITableViewDataSource {
         let bottomPadding = UIFloatMenuHelper.getPadding(.bottom)
         
         let appRect = UIApplication.shared.windows[0].bounds
-        let screenH = appRect.height-topPadding-bottomPadding
         var topSpace: CGFloat {
             let device = UIDevice.current.userInterfaceIdiom
             return device == .pad ? 70 : (Orientation.isLandscape ? 30 : 50)
         }
+        let maxH = appRect.height-topPadding-bottomPadding-topSpace
         
-        if currentHeight >= screenH {
+        if currentHeight >= maxH {
             tableView.isScrollEnabled = true
-            return appRect.height-topPadding-bottomPadding-topSpace
+            return maxH
         }
         tableView.isScrollEnabled = false
         return currentHeight

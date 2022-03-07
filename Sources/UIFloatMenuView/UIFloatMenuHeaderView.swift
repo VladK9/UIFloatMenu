@@ -4,16 +4,12 @@
 //
 
 import UIKit
-import Foundation
 
 class UIFloatMenuHeaderView: UIView {
     
     private var stackView: UIStackView = UIStackView()
     
-    var menuConfig = UIFloatMenuConfig()
     var headerConfig = UIFloatMenuHeaderConfig()
-    
-    private var viewWidth = CGFloat()
     
     private var headerHeight: CGFloat = 60
     
@@ -57,8 +53,6 @@ class UIFloatMenuHeaderView: UIView {
         let width = (device == .pad ? menuConfig.viewWidth_iPad : (Orientation.isPortrait ? appRect.width-30 : appRect.width/2.5))!
         
         self.headerConfig = headerConfig
-        self.menuConfig = menuConfig
-        self.viewWidth = width
         
         addSubview(cancelButton)
         backgroundColor = menuConfig.blurBackground ? .clear : UIFloatMenuColors.mainColor
@@ -68,7 +62,7 @@ class UIFloatMenuHeaderView: UIView {
         
         if headerConfig.showLine {
             lineView.frame.size = CGSize(width: width-(headerConfig.lineInset*2), height: 1)
-            lineView.center.x = viewWidth/2
+            lineView.center.x = width/2
             addSubview(lineView)
         }
         
@@ -97,8 +91,8 @@ class UIFloatMenuHeaderView: UIView {
         
         stackView.isUserInteractionEnabled = true
         
-        let pan = UITapGestureRecognizer(target: self, action: #selector(tapClose(_:)))
-        cancelButton.addGestureRecognizer(pan)
+        let tap = UITapGestureRecognizer(target: self, action: #selector(tapClose(_:)))
+        cancelButton.addGestureRecognizer(tap)
     }
     
     //MARK: - coder

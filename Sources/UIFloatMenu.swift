@@ -32,8 +32,7 @@ class UIFloatMenu {
     static private var animationDuration: TimeInterval = 0.3
     
     // Delegate
-    static var closeDelegate: UIFloatMenuCloseDelegate?
-    static var textFieldDelegate: UIFloatMenuTextFieldDelegate?
+    static public var delegate = Delegates()
     
     // Queue
     static private var queue = [UIFloatMenuQueue]()
@@ -41,11 +40,11 @@ class UIFloatMenu {
     //MARK: - Show
     static func show(_ vc: UIViewController, actions: [UIFloatMenuAction]) {
         if queue.count <= maxView {
-            let correct = correctPosition(viewConfig.presentation)
+            let correct = UIFloatMenuHelper.correctPosition(viewConfig.presentation)
             let id = UIFloatMenuID.genUUID(queue.count)
             
             let menuView = UIFloatMenuView.init(items: actions, vc: currentVC, header: headerConfig, config: viewConfig,
-                                                closeDelegate: closeDelegate, textFieldDelegate: textFieldDelegate)
+                                                delegate: delegate)
             menuView.tag = id
             
             vc.view.addSubview(menuView)
@@ -137,37 +136,12 @@ class UIFloatMenu {
     static private func panChanged(_ gesture: UIPanGestureRecognizer) {
         let view = gesture.view!
         let translation = gesture.translation(in: gesture.view)
-        let velocity = gesture.velocity(in: gesture.view)
         
-        var translationAmount = translation.y >= 0 ? translation.y : -pow(abs(translation.y), 0.7)
+        var translationAmount = translation.y >= 0 ? translation.y : -pow(abs(translation.y), 0.5)
         
         let rubberBanding = true
         
         if !rubberBanding && translationAmount < 0 { translationAmount = 0 }
-        
-        if gesture.direction(in: view) == .Up && gesture.view!.frame.origin.y < initY.last! {
-            if let UIFloatMenu = currentVC.view.viewWithTag(queue.last!.uuid!) {
-                let backTranslationAmount = translation.y >= 0 ? translation.y : -pow(abs(translation.y), 0.6)
-                UIFloatMenu.transform = CGAffineTransform(translationX: 0, y: backTranslationAmount)
-            }
-        }
-        
-        if gesture.direction(in: view) == .Down {
-            for order in 0..<queue.count-1 {
-                if let UIFloatMenu = currentVC.view.viewWithTag(queue[order].uuid) {
-                    if velocity.y > 180 {
-                        UIView.animate(withDuration: 0.2, animations: {
-                            UIFloatMenu.transform = .identity
-                        })
-                    } else {
-                        if UIFloatMenu.frame.origin.y <= initY[order] {
-                            let backTranslationAmount = translation.y >= 0 ? translation.y : -pow(abs(translation.y), 0.6)
-                            UIFloatMenu.transform = CGAffineTransform(translationX: 0, y: backTranslationAmount)
-                        }
-                    }
-                }
-            }
-        }
         
         view.transform = CGAffineTransform(translationX: 0, y: translationAmount)
     }
@@ -186,33 +160,9 @@ class UIFloatMenu {
         }
     }
     
-    // MARK: - correctPosition()
-    static public func correctPosition(_ position: UIFloatMenuPresentStyle) -> UIFloatMenuPresentStyle {
-        let device = UIDevice.current.userInterfaceIdiom
-        
-        if device == .pad {
-            let layout = Layout.determineLayout()
-            
-            if layout == .iPadOneThirdScreen {
-                if case .center = position {
-                    return .center
-                }
-                return .default
-            }
-            return position
-        } else if device == .phone {
-            if case .center = position {
-                return .center
-            }
-            return .default
-        } else {
-            return position
-        }
-    }
-    
     // MARK: - closeMenu()
     static private func closeMenu(_ menuView: UIView) {
-        let correct = correctPosition(viewConfig.presentation)
+        let correct = UIFloatMenuHelper.correctPosition(viewConfig.presentation)
         let appRect = UIApplication.shared.windows[0].bounds
         let topPadding = UIFloatMenuHelper.getPadding(.top)
         
@@ -268,9 +218,10 @@ class UIFloatMenu {
             }
             
             menuView.alpha = 0
-            UIView.animate(withDuration: animationDuration, animations: {
+            let animator = UIViewPropertyAnimator(duration: animationDuration, dampingRatio: 1.0) {
                 menuView.alpha = 1
-            })
+            }
+            animator.startAnimation()
             break
         case .default:
             if iPad_window_width != 0 {
@@ -279,9 +230,10 @@ class UIFloatMenu {
                 if animation {
                     menuView.center = CGPoint(x: appRect.width/2, y: getPrepare)
                     
-                    UIView.animate(withDuration: animationDuration, delay: 0, options: .transitionCurlUp, animations: {
+                    let animator = UIViewPropertyAnimator(duration: animationDuration, dampingRatio: 1.0) {
                         menuView.center.y = getShow
-                    })
+                    }
+                    animator.startAnimation()
                 } else {
                     menuView.center = CGPoint(x: appRect.width/2, y: getShow)
                 }
@@ -293,9 +245,10 @@ class UIFloatMenu {
             
             if animation {
                 menuView.alpha = 0
-                UIView.animate(withDuration: animationDuration, animations: {
+                let animator = UIViewPropertyAnimator(duration: animationDuration, dampingRatio: 1.0) {
                     menuView.alpha = 1
-                })
+                }
+                animator.startAnimation()
             }
             break
         case .leftDown(let overToolBar):
@@ -304,9 +257,10 @@ class UIFloatMenu {
             
             if animation {
                 menuView.alpha = 0
-                UIView.animate(withDuration: animationDuration, delay: 0, options: .curveEaseOut, animations: {
+                let animator = UIViewPropertyAnimator(duration: animationDuration, dampingRatio: 1.0) {
                     menuView.alpha = 1
-                })
+                }
+                animator.startAnimation()
             }
             break
         case .rightUp(let overNavBar):
@@ -318,9 +272,10 @@ class UIFloatMenu {
                 
                 if animation {
                     menuView.alpha = 0
-                    UIView.animate(withDuration: animationDuration, animations: {
+                    let animator = UIViewPropertyAnimator(duration: animationDuration, dampingRatio: 1.0) {
                         menuView.alpha = 1
-                    })
+                    }
+                    animator.startAnimation()
                 }
             }
             break
@@ -333,9 +288,10 @@ class UIFloatMenu {
                 
                 if animation {
                     menuView.alpha = 0
-                    UIView.animate(withDuration: animationDuration, animations: {
+                    let animator = UIViewPropertyAnimator(duration: animationDuration, dampingRatio: 1.0) {
                         menuView.alpha = 1
-                    })
+                    }
+                    animator.startAnimation()
                 }
             }
             break

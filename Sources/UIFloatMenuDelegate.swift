@@ -5,6 +5,12 @@
 
 import UIKit
 
+//MARK: - Delegates
+public struct Delegates {
+    var close: UIFloatMenuCloseDelegate!
+    var textField: UIFloatMenuTextFieldDelegate!
+}
+
 //MARK: - UIFloatMenuCloseDelegate
 public protocol UIFloatMenuCloseDelegate: AnyObject {
     
