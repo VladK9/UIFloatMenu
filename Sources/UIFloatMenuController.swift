@@ -151,15 +151,15 @@ class UIFloatMenuController: UIViewController, UIGestureRecognizerDelegate {
                 } else {
                     let last = (queue.last?.config.presentation)!
                     if case .rightDown(_) = last {
-                        menu.showTo(menuView, positions: .default)
+                        menu.showTo(menuView, positions: .default, animation: false)
                     } else if case .rightUp(_) = last {
-                        menu.showTo(menuView, positions: .default)
+                        menu.showTo(menuView, positions: .default, animation: false)
                     } else if case .leftUp(_) = last {
-                        menu.showTo(menuView, positions: .default)
+                        menu.showTo(menuView, positions: .default, animation: false)
                     } else if case .leftDown(_) = last {
-                        menu.showTo(menuView, positions: .default)
+                        menu.showTo(menuView, positions: .default, animation: false)
                     } else if case .default = last {
-                        menu.showTo(menuView, positions: .default)
+                        menu.showTo(menuView, positions: .default, animation: false)
                     } else {
                         menu.showTo(menuView, positions: last, iPad_window_width: 0)
                     }
@@ -202,12 +202,7 @@ class UIFloatMenuController: UIViewController, UIGestureRecognizerDelegate {
                             for gesture in menuView.gestureRecognizers! {
                                 gesture.isEnabled = true
                             }
-                        } else if layout == .iPadHalfScreen{
-                            position = last
-                            for gesture in menuView.gestureRecognizers! {
-                                gesture.isEnabled = false
-                            }
-                        } else if layout == .iPadTwoThirdScreen {
+                        } else if layout == .iPadHalfScreen || layout == .iPadTwoThirdScreen {
                             position = last
                             for gesture in menuView.gestureRecognizers! {
                                 gesture.isEnabled = false
@@ -224,7 +219,7 @@ class UIFloatMenuController: UIViewController, UIGestureRecognizerDelegate {
                     if Orientation.isLandscape {
                         menuView.center = self.view.center
                     } else {
-                        menu.showTo(menuView, positions: UIFloatMenuHelper.correctPosition((self.queue.last?.config.presentation)!))
+                        menu.showTo(menuView, positions: UIFloatMenuHelper.correctPosition((self.queue.last?.config.presentation)!), animation: false)
                     }
                 }
             }

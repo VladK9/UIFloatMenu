@@ -50,8 +50,9 @@
    
    Action item height
    ```swift
-   - standard
    - compact
+   - standard
+   - big
    ```
    
    Spacer type

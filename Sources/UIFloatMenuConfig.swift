@@ -174,9 +174,6 @@ class UIFloatMenuID {
     let shared = UIFloatMenuID()
     
     static let backViewID = 100010001
-    static let containerViewID = 200020002
-    static let hideViewID = 300030003
-    static let IDArray = [backViewID, containerViewID, hideViewID]
     
     static func genUUID(_ count: Int) -> Int {
         if count == 0 {

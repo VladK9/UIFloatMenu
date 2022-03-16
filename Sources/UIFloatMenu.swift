@@ -15,24 +15,23 @@ class UIFloatMenu {
         return vc
     }
     
-    static private var initY = [CGFloat]()
-    
     static public var currentVC = UIViewController()
     
+    // Config
     static public var viewConfig = UIFloatMenuConfig()
     static public var headerConfig = UIFloatMenuHeaderConfig()
     
+    // Delegate
+    static public var delegate = Delegates()
+    
+    // KeyboardHelper
     static private var keyboardHelper: KeyboardHelper?
     
-    //MARK: - Config
     // Max view to show
     static private var maxView: Int = 3
     
     // Animation duration
     static private var animationDuration: TimeInterval = 0.3
-    
-    // Delegate
-    static public var delegate = Delegates()
     
     // Queue
     static private var queue = [UIFloatMenuQueue]()
@@ -43,16 +42,10 @@ class UIFloatMenu {
             let correct = UIFloatMenuHelper.correctPosition(viewConfig.presentation)
             let id = UIFloatMenuID.genUUID(queue.count)
             
-            let menuView = UIFloatMenuView.init(items: actions, vc: currentVC, header: headerConfig, config: viewConfig,
-                                                delegate: delegate)
+            let menuView = UIFloatMenuView.init(items: actions, vc: currentVC, header: headerConfig, config: viewConfig, delegate: delegate)
             menuView.tag = id
             
             vc.view.addSubview(menuView)
-            
-            let pan = UIPanGestureRecognizer(target: self, action: #selector(UIFloatMenuDrag(_:)))
-            pan.maximumNumberOfTouches = 1
-            pan.cancelsTouchesInView = true
-            menuView.addGestureRecognizer(pan)
             
             if case .default = correct {
                 for gesture in menuView.gestureRecognizers! {
@@ -81,8 +74,6 @@ class UIFloatMenu {
             }
             
             showTo(menuView, positions: correct)
-            
-            initY.append(menuView.frame.origin.y)
         } else {
             print("Max view count")
         }
@@ -103,61 +94,6 @@ class UIFloatMenu {
         }
         
         queue.removeAll()
-        initY.removeAll()
-    }
-    
-    //MARK: - UIFloatMenuDrag
-    @objc static private func UIFloatMenuDrag(_ sender: UIPanGestureRecognizer) {
-        let appRect = UIApplication.shared.windows[0].bounds
-        let topPadding = UIFloatMenuHelper.getPadding(.top)
-        let bottomPadding = UIFloatMenuHelper.getPadding(.bottom)
-        
-        let screen = topPadding + appRect.height + bottomPadding
-        
-        var dismissDragSize: CGFloat {
-            return bottomPadding.isZero ? screen - (topPadding*4.5) : screen - (bottomPadding*4)
-        }
-        
-        switch sender.state {
-        case .began:
-            break
-        case .changed:
-            panChanged(sender)
-        case .ended, .cancelled:
-            panEnded(sender, dismissDragSize: dismissDragSize)
-        case .failed, .possible:
-            break
-        @unknown default:
-            break
-        }
-    }
-    
-    // MARK: - panChanged()
-    static private func panChanged(_ gesture: UIPanGestureRecognizer) {
-        let view = gesture.view!
-        let translation = gesture.translation(in: gesture.view)
-        
-        var translationAmount = translation.y >= 0 ? translation.y : -pow(abs(translation.y), 0.5)
-        
-        let rubberBanding = true
-        
-        if !rubberBanding && translationAmount < 0 { translationAmount = 0 }
-        
-        view.transform = CGAffineTransform(translationX: 0, y: translationAmount)
-    }
-    
-    // MARK: - panEnded()
-    static private func panEnded(_ gesture: UIPanGestureRecognizer, dismissDragSize: CGFloat) {
-        let velocity = gesture.velocity(in: gesture.view).y
-        if ((gesture.view!.frame.origin.y+40) >= dismissDragSize) || (velocity > 180) {
-            NotificationCenter.default.post(name: NSNotification.Name("UIFloatMenuClose"), object: nil)
-        } else {
-            UIView.animate(withDuration: 0.2, animations: {
-                if let UIFloatMenu = currentVC.view.viewWithTag(queue.last!.uuid!) {
-                    UIFloatMenu.transform = .identity
-                }
-            })
-        }
     }
     
     // MARK: - closeMenu()
@@ -229,7 +165,6 @@ class UIFloatMenu {
             } else {
                 if animation {
                     menuView.center = CGPoint(x: appRect.width/2, y: getPrepare)
-                    
                     let animator = UIViewPropertyAnimator(duration: animationDuration, dampingRatio: 1.0) {
                         menuView.center.y = getShow
                     }

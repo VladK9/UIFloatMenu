@@ -120,7 +120,19 @@ class UIFloatMenuActionCell: UITableViewCell {
         
         contentStackView.translatesAutoresizingMaskIntoConstraints = false
         
-        let top_bottom: CGFloat = (itemHeight == .standard ? 10 : 7)
+        var top_bottom: CGFloat {
+            switch itemHeight {
+            case .standard:
+                return 10
+            case .compact:
+                return 7
+            case .big:
+                return 16
+            case .none:
+                break
+            }
+            return 0
+        }
         
         switch itemLayout {
         case .Icon_Title:

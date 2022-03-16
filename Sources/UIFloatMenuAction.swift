@@ -7,8 +7,9 @@ import UIKit
 
 //MARK: - heightStyle
 public enum heightStyle {
-    case standard
     case compact
+    case standard
+    case big
 }
 
 //MARK: - labelConfig
