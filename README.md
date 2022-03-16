@@ -95,13 +95,17 @@ menu.config.cornerRadius = 12
 menu.config.blurBackground = true
 menu.config.viewWidth_iPad = 350
 menu.config.presentation = .default
-menu.closeDelegate = self
+menu.delegate.close = self
 menu.show(self)
 ```
 
 ## Delegate
 
-To `know when menu is closed`, set the delegate with protocol `UIFloatMenuCloseDelegate`:
+To know `when menu is closed`, set the delegate with protocol `UIFloatMenuCloseDelegate`:
+
+```swift
+menu.delegate.close = self
+```
 
 ```swift
 func UIFloatMenuDidCloseMenu() {
@@ -110,6 +114,10 @@ func UIFloatMenuDidCloseMenu() {
 ```
 
 To get `UITextField data`, set the delegate with protocol `UIFloatMenuTextFieldDelegate`:
+
+```swift
+menu.delegate.textField = self
+```
 
 ```swift
 func UIFloatMenuGetTextFieldData(_ data: [String]) {
