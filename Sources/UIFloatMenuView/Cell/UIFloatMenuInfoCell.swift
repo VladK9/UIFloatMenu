@@ -10,10 +10,19 @@ class UIFloatMenuInfoCell: UITableViewCell {
     // MARK: Views
     private var contentStackView: UIStackView = UIStackView()
     
+    var backView: UIView = {
+        let uiview = UIView()
+        uiview.layer.cornerRadius = 7
+        uiview.isUserInteractionEnabled = false
+        return uiview
+    }()
+    
     lazy var iconImageView: UIImageView = {
         let imageView = UIImageView()
         imageView.contentMode = .scaleAspectFit
         imageView.isUserInteractionEnabled = false
+        imageView.image = imageView.image?.withRenderingMode(.alwaysTemplate)
+        imageView.tintColor = UIFloatMenuColors.revColor?.withAlphaComponent(0.65)
         return imageView
     }()
     
@@ -36,9 +45,21 @@ class UIFloatMenuInfoCell: UITableViewCell {
         fatalError("init(coder:) has not been implemented")
     }
     
+    // MARK: setHighlighted
+    override func setHighlighted(_ highlighted: Bool, animated: Bool) {
+        super.setHighlighted(highlighted, animated: animated)
+        if highlighted {
+            backView.backgroundColor = UIColor.lightGray.withAlphaComponent(0.08)
+        } else {
+            backView.backgroundColor = .clear
+        }
+    }
+    
     // MARK: layoutSubviews
     override func layoutSubviews() {
         super.layoutSubviews()
+        contentView.addSubview(backView)
+        
         if iconImageView.image == nil {
             contentStackView.addArrangedSubview(titleLabel)
         } else {
@@ -46,24 +67,25 @@ class UIFloatMenuInfoCell: UITableViewCell {
             contentStackView.addArrangedSubview(titleLabel)
         }
         
+        backView.frame.size = CGSize(width: frame.width-20, height: frame.height-4)
+        backView.center.x = frame.width/2
+        backView.center.y = frame.height/2
+        
         contentStackView.axis = .horizontal
         contentStackView.spacing = 9
+        contentStackView.alignment = .center
         contentStackView.distribution = .fillProportionally
-        addSubview(contentStackView)
+        contentStackView.translatesAutoresizingMaskIntoConstraints = false
+        backView.addSubview(contentStackView)
         
         NSLayoutConstraint.activate([
-            iconImageView.heightAnchor.constraint(equalToConstant: 23),
-            iconImageView.widthAnchor.constraint(equalToConstant: 23),
-            titleLabel.heightAnchor.constraint(equalToConstant: 30),
-            contentStackView.topAnchor.constraint(equalTo: topAnchor, constant: 5),
-            contentStackView.leadingAnchor.constraint(equalTo: leadingAnchor, constant: 13),
-            contentStackView.bottomAnchor.constraint(equalTo: bottomAnchor, constant: -5),
-            contentStackView.trailingAnchor.constraint(equalTo: trailingAnchor, constant: -13)
+            contentStackView.topAnchor.constraint(equalTo: backView.topAnchor, constant: 2),
+            contentStackView.leadingAnchor.constraint(equalTo: backView.leadingAnchor, constant: 10),
+            contentStackView.bottomAnchor.constraint(equalTo: backView.bottomAnchor, constant: -2),
+            contentStackView.trailingAnchor.constraint(equalTo: backView.trailingAnchor, constant: -10),
+            iconImageView.heightAnchor.constraint(equalToConstant: 20),
+            iconImageView.widthAnchor.constraint(equalToConstant: 20),
+            titleLabel.heightAnchor.constraint(equalToConstant: 30)
         ])
-        contentStackView.translatesAutoresizingMaskIntoConstraints = false
-        
-        let templateImage = iconImageView.image?.withRenderingMode(.alwaysTemplate)
-        iconImageView.image = templateImage
-        iconImageView.tintColor = UIFloatMenuColors.revColor?.withAlphaComponent(0.65)
     }
 }

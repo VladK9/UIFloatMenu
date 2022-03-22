@@ -68,10 +68,10 @@ class UIFloatMenuController: UIViewController, UIGestureRecognizerDelegate {
                 if userInterfaceStyle == .dark {
                     self.backgroundView.backgroundColor = UIColor.black.withAlphaComponent(0.02)
                 } else {
-                    self.backgroundView.backgroundColor = UIColor.black.withAlphaComponent(0.3)
+                    self.backgroundView.backgroundColor = UIColor.black.withAlphaComponent(0.2)
                 }
             } else {
-                self.backgroundView.backgroundColor = UIColor.black.withAlphaComponent(0.3)
+                self.backgroundView.backgroundColor = UIColor.black.withAlphaComponent(0.2)
             }
         }
         
@@ -122,7 +122,7 @@ class UIFloatMenuController: UIViewController, UIGestureRecognizerDelegate {
             if userInterfaceStyle == .dark {
                 backgroundView.backgroundColor = UIColor.black.withAlphaComponent(0.02)
             } else {
-                backgroundView.backgroundColor = UIColor.black.withAlphaComponent(0.3)
+                backgroundView.backgroundColor = UIColor.black.withAlphaComponent(0.2)
             }
         } else {
             backgroundView.backgroundColor = UIColor.black.withAlphaComponent(0.2)

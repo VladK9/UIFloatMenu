@@ -32,7 +32,6 @@ class UIFloatMenuHeaderView: UIView {
     
     private var cancelButton: UIButton = {
         let button = UIButton(type: .system)
-        button.isEnabled = true
         button.setImage(UIImage(systemName: "multiply.circle.fill", withConfiguration: UIImage.SymbolConfiguration(textStyle: .title3)), for: .normal)
         button.tintColor = UIColor.systemGray.withAlphaComponent(0.4)
         return button
@@ -105,6 +104,9 @@ class UIFloatMenuHeaderView: UIView {
         super.layoutSubviews()
         cancelButton.frame = CGRect(x: frame.width-41, y: 0, width: 30, height: 30)
         cancelButton.center.y = headerHeight/2
+        if #available(iOS 13.4, *) {
+            cancelButton.isPointerInteractionEnabled = true
+        }
         
         if headerConfig.showLine {
             lineView.frame.size = CGSize(width: frame.size.width-(headerConfig.lineInset*2), height: 1)

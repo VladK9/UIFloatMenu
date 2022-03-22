@@ -39,7 +39,7 @@ class UIFloatMenuSpacerCell: UITableViewCell {
                 return uiview
             }()
             
-            contentStackView.directionalLayoutMargins = NSDirectionalEdgeInsets(top: 4.5, leading: inset, bottom: 4.5, trailing: inset)
+            contentStackView.directionalLayoutMargins = NSDirectionalEdgeInsets(top: 5.5, leading: inset, bottom: 5.5, trailing: inset)
             
             contentStackView.addArrangedSubview(lineView)
             break

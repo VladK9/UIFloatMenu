@@ -5,7 +5,7 @@
 
 import UIKit
 
-class UIFloatMenuView: UIView, UITableViewDelegate, UITableViewDataSource, UIGestureRecognizerDelegate {
+class UIFloatMenuView: UIView, UITableViewDelegate, UITableViewDataSource, UIGestureRecognizerDelegate, UIPointerInteractionDelegate {
         
     private var currentVC = UIViewController()
     
@@ -89,7 +89,7 @@ class UIFloatMenuView: UIView, UITableViewDelegate, UITableViewDataSource, UIGes
         
         layer.cornerRadius = config.cornerRadius
         layer.masksToBounds = true
-        layer.borderWidth = 0.5
+        layer.borderWidth = 1
         layer.borderColor = UIColor.darkGray.withAlphaComponent(0.25).cgColor
         
         let pan = UIPanGestureRecognizer(target: self, action: #selector(UIFloatMenuDrag(_:)))
@@ -135,6 +135,7 @@ class UIFloatMenuView: UIView, UITableViewDelegate, UITableViewDataSource, UIGes
         tableView.register(UIFloatMenuTextFieldCell.self, forCellReuseIdentifier: "UIFloatMenuTextFieldCell")
         tableView.register(UIFloatMenuSwitchCell.self, forCellReuseIdentifier: "UIFloatMenuSwitchCell")
         tableView.register(UIFloatMenuSegmentCell.self, forCellReuseIdentifier: "UIFloatMenuSegmentCell")
+        tableView.register(UIFloatMenuHorizontalCell.self, forCellReuseIdentifier: "UIFloatMenuHorizontalCell")
         tableView.delegate = self
         tableView.dataSource = self
     }
@@ -161,6 +162,10 @@ class UIFloatMenuView: UIView, UITableViewDelegate, UITableViewDataSource, UIGes
             cell.titleLabel.text = title
             cell.subtitleLabel.text = subtitle
             
+            if #available(iOS 13.4, *) {
+                cell.addInteraction(UIPointerInteraction(delegate: self))
+            }
+            
             return cell
         case .InfoCell(let icon, let title, let labelConfig):
             let cell = tableView.dequeueReusableCell(withIdentifier: "UIFloatMenuInfoCell", for: indexPath) as! UIFloatMenuInfoCell
@@ -169,6 +174,10 @@ class UIFloatMenuView: UIView, UITableViewDelegate, UITableViewDataSource, UIGes
             cell.titleLabel.text = title
             if case .config(let fontSize, let fontWeight) = labelConfig {
                 cell.titleLabel.font = UIFloatMenuHelper.roundedFont(fontSize: fontSize, weight: fontWeight)
+            }
+            
+            if #available(iOS 13.4, *) {
+                cell.addInteraction(UIPointerInteraction(delegate: self))
             }
             
             return cell
@@ -217,6 +226,24 @@ class UIFloatMenuView: UIView, UITableViewDelegate, UITableViewDataSource, UIGes
             cell.segmentView.selectedSegmentIndex = selected
             
             return cell
+        case .HorizontalCell(let items, let heightStyle, let layout):
+            let cell = tableView.dequeueReusableCell(withIdentifier: "UIFloatMenuHorizontalCell", for: indexPath) as! UIFloatMenuHorizontalCell
+            
+            var correctedItems: [UIFloatMenuAction] {
+                var corrected = [UIFloatMenuAction]()
+                for index in 0..<items.count {
+                    if case .ActionCell(_, _, _, _, _) = items[index].item {
+                        corrected.append(items[index])
+                    }
+                }
+                return corrected
+            }
+            
+            let h_view = HorizontalView.init(items: correctedItems, viewSize: cell.frame.size, height: heightStyle, layout: layout)
+            cell.contentView.addSubview(h_view)
+            h_view.frame.origin = CGPoint(x: 0, y: 0)
+            
+            return cell
         }
     }
     
@@ -229,10 +256,6 @@ class UIFloatMenuView: UIView, UITableViewDelegate, UITableViewDataSource, UIGes
                 delegate.textField?.UIFloatMenuGetTextFieldData(getTF_data())
             }
             
-            if delegate.close != nil {
-                delegate.close?.UIFloatMenuDidCloseMenu()
-            }
-            
             row.action!(row)
             if row.closeOnTap {
                 NotificationCenter.default.post(name: NSNotification.Name("UIFloatMenuClose"), object: nil)
@@ -242,34 +265,37 @@ class UIFloatMenuView: UIView, UITableViewDelegate, UITableViewDataSource, UIGes
     
     //MARK: - heightForRowAt
     func tableView(_ tableView: UITableView, heightForRowAt indexPath: IndexPath) -> CGFloat {
-        var height: CGFloat = CGFloat()
-        
         let row = itemsData[indexPath.item]
         switch row.item {
         case .ActionCell(_, _, _, _, let heightStyle):
             switch heightStyle {
             case .standard:
-                height = 57
+                return 57
             case .compact:
-                height = 47
+                return 47
             case .big:
-                height = 67
+                return 67
             }
         case .Title(_):
-            height = 30
+            return 30
         case .Spacer(_):
-            height = 10
+            return 12
         case .InfoCell(_, _, _):
-            height = 36
+            return 38
         case .TextFieldCell(_, _, _, _, _, _):
-            height = 57
+            return 57
         case .SwitchCell(_, _, _, _, _):
-            height = 40
+            return 40
         case .SegmentCell(_, _, _, _):
-            height = 50
+            return 50
+        case .HorizontalCell(_, let heightStyle, _):
+            switch heightStyle {
+            case .standard:
+                return 85
+            case .compact:
+                return 50
+            }
         }
-        
-        return height
     }
     
     //MARK: - setMaxHeight()
@@ -295,14 +321,13 @@ class UIFloatMenuView: UIView, UITableViewDelegate, UITableViewDataSource, UIGes
     //MARK: - setMaxWidth()
     private func setMaxWidth(_ currentWidth: CGFloat) -> CGFloat {
         let appRect = UIApplication.shared.windows[0].bounds
-        
         let device = UIDevice.current.userInterfaceIdiom
         
         if device == .pad {
             return currentWidth
         } else if device == .phone {
             if Orientation.isLandscape {
-                return appRect.width/2.5
+                return appRect.height-30
             } else if Orientation.isPortrait {
                 return appRect.width-30
             }
@@ -380,6 +405,7 @@ class UIFloatMenuView: UIView, UITableViewDelegate, UITableViewDataSource, UIGes
     
     //MARK: - scrollViewDidScroll
     func scrollViewDidScroll(_ scrollView: UIScrollView) {
+        print("scrollViewDidScroll")
         if scrollView.contentOffset.y < 0 {
             scrollView.contentOffset.y = 0
         }
@@ -387,10 +413,53 @@ class UIFloatMenuView: UIView, UITableViewDelegate, UITableViewDataSource, UIGes
     
     //MARK: - shouldRecognizeSimultaneouslyWith
     func gestureRecognizer(_ gestureRecognizer: UIGestureRecognizer, shouldRecognizeSimultaneouslyWith otherGestureRecognizer: UIGestureRecognizer) -> Bool {
+        if !tableView.isScrollEnabled {
+            return false
+        }
+        
         if tableView.contentOffset.y == 0 {
             return true
         }
+        
         return false
+    }
+    
+    //MARK: - pointerInteraction styleFor
+    @available(iOS 13.4, *)
+    func pointerInteraction(_ interaction: UIPointerInteraction, styleFor region: UIPointerRegion) -> UIPointerStyle? {
+        var pointerStyle: UIPointerStyle?
+        if let interactionViewAction = interaction.view as? UIFloatMenuActionCell {
+            let targetedPreview = UITargetedPreview(view: interactionViewAction.backView)
+            pointerStyle = UIPointerStyle(effect: UIPointerEffect.hover(targetedPreview,
+                                                                        prefersScaledContent: false))
+        }
+        
+        if let interactionViewInfo = interaction.view as? UIFloatMenuInfoCell {
+            let targetedPreview = UITargetedPreview(view: interactionViewInfo.backView)
+            pointerStyle = UIPointerStyle(effect: UIPointerEffect.hover(targetedPreview,
+                                                                        prefersScaledContent: false))
+        }
+        return pointerStyle
+    }
+    
+    //MARK: - pointerInteraction willEnter
+    @available(iOS 13.4, *)
+    func pointerInteraction(_ interaction: UIPointerInteraction, willEnter region: UIPointerRegion, animator: UIPointerInteractionAnimating) {
+        if let interactionView = interaction.view {
+            animator.addAnimations {
+                interactionView.alpha = 1.0
+            }
+        }
+    }
+    
+    //MARK: - pointerInteraction willExit
+    @available(iOS 13.4, *)
+    func pointerInteraction(_ interaction: UIPointerInteraction, willExit region: UIPointerRegion, animator: UIPointerInteractionAnimating) {
+        if let interactionView = interaction.view {
+            animator.addAnimations {
+                interactionView.alpha = 1.0
+            }
+        }
     }
 
 }

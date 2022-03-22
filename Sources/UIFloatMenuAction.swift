@@ -5,6 +5,19 @@
 
 import UIKit
 
+//MARK: - h_heightStyle
+public enum h_heightStyle {
+    case compact
+    case standard
+}
+
+//MARK: - h_cellLayout
+public enum h_cellLayout {
+    case Icon_Title
+    case center
+    case Title_Icon
+}
+
 //MARK: - heightStyle
 public enum heightStyle {
     case compact
@@ -110,6 +123,13 @@ public enum itemSetup {
     - Parameter action: Action for SegmentControl
     */
     case SegmentCell(title: String = "", items: [Any], selected: Int = 0, action: Selector)
+    
+    /**
+    UIFloatMenu: HorizontalCell
+    
+    - Parameter items: [UIFloatMenuAction]
+    */
+    case HorizontalCell(items: [UIFloatMenuAction], height: h_heightStyle = .standard, layout: h_cellLayout = .center)
 }
 
 public typealias UIFloatMenuActionHandler = (UIFloatMenuAction) -> Void

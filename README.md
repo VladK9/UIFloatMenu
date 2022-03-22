@@ -55,6 +55,12 @@
    - big
    ```
    
+   Horizontal Action item height
+   ```swift
+   - compact
+   - standard
+   ```
+   
    Spacer type
    ```swift
    - empty
@@ -82,7 +88,8 @@ let actions: [UIFloatMenuAction] = [
     .init(item: .Spacer(type: .line())),
     .init(item: .ActionCell(icon: UIImage(systemName: "arrow.right.square.fill")!, title: "Title", subtitle: "Test subtitle", layout: .Icon_Title), itemColor: .filled(.systemPurple), action: { _ in
         print("Action")
-    })
+    }),
+    .init(item: .HorizontalCell(items: h_actions, height: .standard))
 ]
         
 let menu = UIFloatMenu.setup(actions: actions)
