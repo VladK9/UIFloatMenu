@@ -7,7 +7,7 @@ import UIKit
 
 class UIFloatMenuView: UIView, UITableViewDelegate, UITableViewDataSource, UIGestureRecognizerDelegate, UIPointerInteractionDelegate {
         
-    private var currentVC = UIViewController()
+    private var source_VC = UIViewController()
     
     private var config = UIFloatMenuConfig()
     private var headerConfig = UIFloatMenuHeaderConfig()
@@ -21,6 +21,8 @@ class UIFloatMenuView: UIView, UITableViewDelegate, UITableViewDataSource, UIGes
     //MARK: - tableView
     lazy var tableView: UITableView = {
         let table = UITableView()
+        table.allowsMultipleSelection = true
+        table.delaysContentTouches = true
         table.tag = UIFloatMenuID.backViewID
         table.translatesAutoresizingMaskIntoConstraints = false
         table.backgroundColor = .clear
@@ -35,11 +37,10 @@ class UIFloatMenuView: UIView, UITableViewDelegate, UITableViewDataSource, UIGes
     }()
     
     //MARK: - Lifecycle
-    public init(items: [UIFloatMenuAction], vc: UIViewController, header: UIFloatMenuHeaderConfig, config: UIFloatMenuConfig,
-                delegate: Delegates) {
+    public init(items: [UIFloatMenuAction], vc: UIViewController, header: UIFloatMenuHeaderConfig, config: UIFloatMenuConfig, delegate: Delegates) {
         super.init(frame: CGRect.zero)
         
-        self.currentVC = vc
+        self.source_VC = vc
         self.itemsData = items
         self.config = config
         self.headerConfig = header
@@ -84,7 +85,7 @@ class UIFloatMenuView: UIView, UITableViewDelegate, UITableViewDataSource, UIGes
             addSubview(blurView)
             sendSubviewToBack(blurView)
         } else {
-            backgroundColor = UIFloatMenuColors.mainColor
+            backgroundColor = UIFloatMenuColors.mainColor()
         }
         
         layer.cornerRadius = config.cornerRadius
@@ -136,8 +137,11 @@ class UIFloatMenuView: UIView, UITableViewDelegate, UITableViewDataSource, UIGes
         tableView.register(UIFloatMenuSwitchCell.self, forCellReuseIdentifier: "UIFloatMenuSwitchCell")
         tableView.register(UIFloatMenuSegmentCell.self, forCellReuseIdentifier: "UIFloatMenuSegmentCell")
         tableView.register(UIFloatMenuHorizontalCell.self, forCellReuseIdentifier: "UIFloatMenuHorizontalCell")
+        tableView.register(UIFloatMenuCustomCell.self, forCellReuseIdentifier: "UIFloatMenuCustomCell")
         tableView.delegate = self
         tableView.dataSource = self
+        
+        preselectCell()
     }
     
     //MARK: - numberOfRowsInSection
@@ -147,19 +151,32 @@ class UIFloatMenuView: UIView, UITableViewDelegate, UITableViewDataSource, UIGes
     
     //MARK: - cellForRowAt
     func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
-        let row = itemsData[indexPath.item]
+        let row = itemsData[indexPath.row]
         
         switch row.item {
-        case .ActionCell(let icon, let title, let subtitle, let layout, let height):
+        case .ActionCell(let selection, let subtitle, let itemColor, let layout, let height):
             let cell = tableView.dequeueReusableCell(withIdentifier: "UIFloatMenuActionCell", for: indexPath) as! UIFloatMenuActionCell
             
-            cell.itemColor = row.itemColor
+            cell.itemColor = itemColor
             cell.itemLayout = layout
             cell.itemHeight = height
             
-            cell.iconImageView.image = icon
+            if case .default(let icon, let title) = selection {
+                cell.iconImageView.image = icon
+                cell.titleLabel.text = title
+            } else if case .multi(let isSelected, let selectedIcon, let selectedTitle, let defaultIcon, let defaultTitle) = selection {
+                cell.selection = selection
+                if isSelected {
+                    cell.iconImageView.image = selectedIcon
+                    cell.titleLabel.text = selectedTitle
+                    cell.isSelected = true
+                } else {
+                    cell.iconImageView.image = defaultIcon
+                    cell.titleLabel.text = defaultTitle
+                    cell.isSelected = false
+                }
+            }
             
-            cell.titleLabel.text = title
             cell.subtitleLabel.text = subtitle
             
             if #available(iOS 13.4, *) {
@@ -191,7 +208,7 @@ class UIFloatMenuView: UIView, UITableViewDelegate, UITableViewDataSource, UIGes
             cell.spacerType = type
             
             return cell
-        case .TextFieldCell(let title, let placeholder, let isResponder, let isSecure, let content, let keyboard):
+        case .TextFieldCell(let title, let placeholder, let isResponder, let isSecure, let content, let keyboard, _):
             let cell = tableView.dequeueReusableCell(withIdentifier: "UIFloatMenuTextFieldCell", for: indexPath) as! UIFloatMenuTextFieldCell
             cell.TextField.text = title
             cell.TextField.placeholder = placeholder
@@ -214,7 +231,7 @@ class UIFloatMenuView: UIView, UITableViewDelegate, UITableViewDataSource, UIGes
             
             cell.switchView.onTintColor = tintColor
             cell.switchView.isOn = isOn
-            cell.switchView.addTarget(currentVC, action: action, for: .valueChanged)
+            cell.switchView.addTarget(source_VC, action: action, for: .valueChanged)
             
             return cell
         case .SegmentCell(let title, let items, let selected, let action):
@@ -222,7 +239,7 @@ class UIFloatMenuView: UIView, UITableViewDelegate, UITableViewDataSource, UIGes
             cell.titleLabel.text = title
             
             cell.items = items
-            cell.segmentView.addTarget(currentVC, action: action, for: .valueChanged)
+            cell.segmentView.addTarget(source_VC, action: action, for: .valueChanged)
             cell.segmentView.selectedSegmentIndex = selected
             
             return cell
@@ -239,9 +256,19 @@ class UIFloatMenuView: UIView, UITableViewDelegate, UITableViewDataSource, UIGes
                 return corrected
             }
             
-            let h_view = HorizontalView.init(items: correctedItems, viewSize: cell.frame.size, height: heightStyle, layout: layout)
-            cell.contentView.addSubview(h_view)
-            h_view.frame.origin = CGPoint(x: 0, y: 0)
+            cell.items = correctedItems
+            cell.viewSize = cell.frame.size
+            cell.heightStyle = heightStyle
+            cell.layout = layout
+            
+            return cell
+        case .CustomCell(let view):
+            let cell = tableView.dequeueReusableCell(withIdentifier: "UIFloatMenuCustomCell", for: indexPath) as! UIFloatMenuCustomCell
+            cell.customView = view
+            
+            if #available(iOS 13.4, *) {
+                cell.addInteraction(UIPointerInteraction(delegate: self))
+            }
             
             return cell
         }
@@ -249,14 +276,50 @@ class UIFloatMenuView: UIView, UITableViewDelegate, UITableViewDataSource, UIGes
     
     //MARK: - didSelectRowAt
     func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
-        let row = itemsData[indexPath.item]
+        let row = itemsData[indexPath.row]
         
-        if case .ActionCell = row.item {
+        if case .ActionCell(let selection, _, _, _, _) = row.item {
             if delegate.textField != nil {
                 delegate.textField?.UIFloatMenuGetTextFieldData(getTF_data())
             }
             
-            row.action!(row)
+            if case .multi(_, _, _, _, _) = selection {
+                row.isSelected = true
+                row.action!(row)
+            } else {
+                if !row.closeOnTap {
+                    row.action!(row)
+                } else {
+                    NotificationCenter.default.post(name: NSNotification.Name("UIFloatMenuClose"), object: nil,
+                                                    userInfo: ["row": row])
+                }
+            }
+        } else if case .CustomCell(_) = row.item {
+            if !row.closeOnTap {
+                row.action!(row)
+            } else {
+                NotificationCenter.default.post(name: NSNotification.Name("UIFloatMenuClose"), object: nil,
+                                                userInfo: ["row": row])
+            }
+        }
+    }
+    
+    //MARK: - didDeselectRowAt
+    func tableView(_ tableView: UITableView, didDeselectRowAt indexPath: IndexPath) {
+        let row = itemsData[indexPath.row]
+        
+        if case .ActionCell(let selection, _, _, _, _) = row.item {
+            if case .multi(_, _, _, _, _) = selection {
+                row.isSelected = false
+                row.action!(row)
+            } else {
+                row.action!(row)
+                if row.closeOnTap {
+                    NotificationCenter.default.post(name: NSNotification.Name("UIFloatMenuClose"), object: nil)
+                }
+            }
+        } else if case .CustomCell(_) = row.item {
+            row.action?(row)
             if row.closeOnTap {
                 NotificationCenter.default.post(name: NSNotification.Name("UIFloatMenuClose"), object: nil)
             }
@@ -265,7 +328,7 @@ class UIFloatMenuView: UIView, UITableViewDelegate, UITableViewDataSource, UIGes
     
     //MARK: - heightForRowAt
     func tableView(_ tableView: UITableView, heightForRowAt indexPath: IndexPath) -> CGFloat {
-        let row = itemsData[indexPath.item]
+        let row = itemsData[indexPath.row]
         switch row.item {
         case .ActionCell(_, _, _, _, let heightStyle):
             switch heightStyle {
@@ -282,7 +345,7 @@ class UIFloatMenuView: UIView, UITableViewDelegate, UITableViewDataSource, UIGes
             return 12
         case .InfoCell(_, _, _):
             return 38
-        case .TextFieldCell(_, _, _, _, _, _):
+        case .TextFieldCell(_, _, _, _, _, _, _):
             return 57
         case .SwitchCell(_, _, _, _, _):
             return 40
@@ -293,8 +356,20 @@ class UIFloatMenuView: UIView, UITableViewDelegate, UITableViewDataSource, UIGes
             case .standard:
                 return 85
             case .compact:
-                return 50
+                return 55
             }
+        case .CustomCell(let view):
+            var height: CGFloat {
+                let viewHeight = view.bounds.height
+                if viewHeight <= 30 {
+                    return 35
+                }
+                if viewHeight >= 80 {
+                    return 85
+                }
+                return viewHeight+5
+            }
+            return height
         }
     }
     
@@ -306,8 +381,9 @@ class UIFloatMenuView: UIView, UITableViewDelegate, UITableViewDataSource, UIGes
         let appRect = UIApplication.shared.windows[0].bounds
         var topSpace: CGFloat {
             let device = UIDevice.current.userInterfaceIdiom
-            return device == .pad ? 70 : (Orientation.isLandscape ? 30 : 50)
+            return device == .pad ? 250 : (Orientation.isLandscape ? 30 : 120)
         }
+        
         let maxH = appRect.height-topPadding-bottomPadding-topSpace
         
         if currentHeight >= maxH {
@@ -336,8 +412,8 @@ class UIFloatMenuView: UIView, UITableViewDelegate, UITableViewDataSource, UIGes
     }
     
     //MARK: - getTF_data()
-    func getTF_data() -> [String] {
-        var data = [String]()
+    func getTF_data() -> [TextFieldRow] {
+        var data = [TextFieldRow]()
         
         for index in 0..<itemsData.count {
             let indexPath = IndexPath(item: index, section: 0)
@@ -345,7 +421,9 @@ class UIFloatMenuView: UIView, UITableViewDelegate, UITableViewDataSource, UIGes
             
             if cell is UIFloatMenuTextFieldCell {
                 let cell = tableView.cellForRow(at: indexPath) as! UIFloatMenuTextFieldCell
-                data.append("\(cell.TextField.text!)")
+                if case .TextFieldCell(_, _, _, _, _, _, let identifier) = itemsData[index].item {
+                    data.append(.init(text: cell.TextField.text, identifier: identifier))
+                }
             }
         }
         
@@ -394,8 +472,8 @@ class UIFloatMenuView: UIView, UITableViewDelegate, UITableViewDataSource, UIGes
     private func panEnded(_ gesture: UIPanGestureRecognizer, point: CGFloat) {
         let velocity = gesture.velocity(in: gesture.view).y
         let view = gesture.view!
-        if ((view.frame.origin.y+view.frame.height/1.6) >= point) || (velocity > 200) {
-            NotificationCenter.default.post(name: NSNotification.Name("UIFloatMenuClose"), object: nil)
+        if ((view.frame.origin.y+view.frame.height/1.8) >= point) || (velocity > 200) {
+            NotificationCenter.default.post(name: NSNotification.Name("UIFloatMenuClose_all"), object: nil)
         } else {
             UIView.animate(withDuration: 0.2, animations: {
                 self.transform = .identity
@@ -405,7 +483,6 @@ class UIFloatMenuView: UIView, UITableViewDelegate, UITableViewDataSource, UIGes
     
     //MARK: - scrollViewDidScroll
     func scrollViewDidScroll(_ scrollView: UIScrollView) {
-        print("scrollViewDidScroll")
         if scrollView.contentOffset.y < 0 {
             scrollView.contentOffset.y = 0
         }
@@ -430,14 +507,17 @@ class UIFloatMenuView: UIView, UITableViewDelegate, UITableViewDataSource, UIGes
         var pointerStyle: UIPointerStyle?
         if let interactionViewAction = interaction.view as? UIFloatMenuActionCell {
             let targetedPreview = UITargetedPreview(view: interactionViewAction.backView)
-            pointerStyle = UIPointerStyle(effect: UIPointerEffect.hover(targetedPreview,
-                                                                        prefersScaledContent: false))
+            pointerStyle = UIPointerStyle(effect: UIPointerEffect.hover(targetedPreview, prefersScaledContent: false))
         }
         
         if let interactionViewInfo = interaction.view as? UIFloatMenuInfoCell {
             let targetedPreview = UITargetedPreview(view: interactionViewInfo.backView)
-            pointerStyle = UIPointerStyle(effect: UIPointerEffect.hover(targetedPreview,
-                                                                        prefersScaledContent: false))
+            pointerStyle = UIPointerStyle(effect: UIPointerEffect.hover(targetedPreview, prefersScaledContent: false))
+        }
+        
+        if let interactionViewInfo = interaction.view as? UIFloatMenuCustomCell {
+            let targetedPreview = UITargetedPreview(view: interactionViewInfo.customView)
+            pointerStyle = UIPointerStyle(effect: UIPointerEffect.hover(targetedPreview, prefersScaledContent: false))
         }
         return pointerStyle
     }
@@ -461,5 +541,35 @@ class UIFloatMenuView: UIView, UITableViewDelegate, UITableViewDataSource, UIGes
             }
         }
     }
+    
+    //MARK: - preselectCell
+    private func preselectCell() {
+        for index in 0..<itemsData.count {
+            let indexPath = IndexPath(row: index, section: 0)
+            let row = itemsData[indexPath.row]
+            
+            if case .ActionCell(let selection, _, _, _, _) = row.item {
+                if case .multi(let preselected, _, _, _, _) = selection {
+                    if preselected {
+                        tableView.selectRow(at: indexPath, animated: false, scrollPosition: .none)
+                    }
+                }
+            }
+        }
+    }
 
+}
+
+fileprivate extension UITableView {
+    var contentSizeHeight: CGFloat {
+        var height = CGFloat(0)
+        for section in 0..<numberOfSections {
+            height = height + rectForHeader(inSection: section).height
+            let rows = numberOfRows(inSection: section)
+            for row in 0..<rows {
+                height = height + rectForRow(at: IndexPath(row: row, section: section)).height
+            }
+        }
+        return height
+    }
 }

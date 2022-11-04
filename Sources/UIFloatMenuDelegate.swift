@@ -11,6 +11,12 @@ public struct Delegates {
     var textField: UIFloatMenuTextFieldDelegate!
 }
 
+//MARK: - TextFieldRow
+public struct TextFieldRow {
+    let text: String!
+    let identifier: String!
+}
+
 //MARK: - UIFloatMenuCloseDelegate
 public protocol UIFloatMenuCloseDelegate: AnyObject {
     
@@ -29,6 +35,6 @@ public protocol UIFloatMenuTextFieldDelegate: AnyObject {
      
      - Returns: Text from all textfields in menu
      */
-    func UIFloatMenuGetTextFieldData(_ data: [String])
+    func UIFloatMenuGetTextFieldData(_ rows: [TextFieldRow])
     
 }

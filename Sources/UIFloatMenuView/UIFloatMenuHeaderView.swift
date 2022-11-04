@@ -14,7 +14,7 @@ class UIFloatMenuHeaderView: UIView {
     private var headerHeight: CGFloat = 60
     
     //MARK: - Views
-    private let TitleLabel: UILabel = {
+    private let titleLabel: UILabel = {
         let label = UILabel()
         label.textAlignment = .left
         label.textColor = UIFloatMenuColors.revColor
@@ -22,7 +22,7 @@ class UIFloatMenuHeaderView: UIView {
         return label
     }()
     
-    private let SubtitleLabel: UILabel = {
+    private let subtitleLabel: UILabel = {
         let label = UILabel()
         label.textAlignment = .left
         label.textColor = UIFloatMenuColors.revColor
@@ -33,6 +33,7 @@ class UIFloatMenuHeaderView: UIView {
     private var cancelButton: UIButton = {
         let button = UIButton(type: .system)
         button.setImage(UIImage(systemName: "multiply.circle.fill", withConfiguration: UIImage.SymbolConfiguration(textStyle: .title3)), for: .normal)
+        button.setImage(UIImage(systemName: "multiply.circle.fill", withConfiguration: UIImage.SymbolConfiguration(textStyle: .title3)), for: .highlighted)
         button.tintColor = UIColor.systemGray.withAlphaComponent(0.4)
         return button
     }()
@@ -54,10 +55,10 @@ class UIFloatMenuHeaderView: UIView {
         self.headerConfig = headerConfig
         
         addSubview(cancelButton)
-        backgroundColor = menuConfig.blurBackground ? .clear : UIFloatMenuColors.mainColor
+        backgroundColor = menuConfig.blurBackground ? .clear : UIFloatMenuColors.mainColor()
         
-        TitleLabel.text = headerConfig.title
-        SubtitleLabel.text = headerConfig.subTitle
+        titleLabel.text = headerConfig.title
+        subtitleLabel.text = headerConfig.subtitle
         
         if headerConfig.showLine {
             lineView.frame.size = CGSize(width: width-(headerConfig.lineInset*2), height: 1)
@@ -68,13 +69,13 @@ class UIFloatMenuHeaderView: UIView {
         stackView.axis = .vertical
         stackView.distribution = .fillProportionally
         
-        if headerConfig.title != "" && headerConfig.subTitle != "" {
-            stackView.addArrangedSubview(TitleLabel)
-            stackView.addArrangedSubview(SubtitleLabel)
+        if headerConfig.title != "" && headerConfig.subtitle != "" {
+            stackView.addArrangedSubview(titleLabel)
+            stackView.addArrangedSubview(subtitleLabel)
         }
         
-        if headerConfig.title != "" && headerConfig.subTitle == "" {
-            stackView.addArrangedSubview(TitleLabel)
+        if headerConfig.title != "" && headerConfig.subtitle == "" {
+            stackView.addArrangedSubview(titleLabel)
         }
         
         addSubview(stackView)

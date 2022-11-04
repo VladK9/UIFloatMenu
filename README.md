@@ -31,6 +31,7 @@
    - TextFieldCell
    - SwitchCell
    - SegmentCell
+   - CustomCell
    ```
    
    Action item color
@@ -89,12 +90,14 @@ let actions: [UIFloatMenuAction] = [
     .init(item: .ActionCell(icon: UIImage(systemName: "arrow.right.square.fill")!, title: "Title", subtitle: "Test subtitle", layout: .Icon_Title), itemColor: .filled(.systemPurple), action: { _ in
         print("Action")
     }),
-    .init(item: .HorizontalCell(items: h_actions, height: .standard))
+    .init(item: .HorizontalCell(items: h_actions, height: .standard)),
+    .init(item: .CustomCell(view: CustomViewRow(title: "Custom rows", subtitle: "View custom rows", icon: UIImage(systemName: "tablecells")!)), action: { _ in
+    })
 ]
         
 let menu = UIFloatMenu.setup(actions: actions)
 menu.header.title = "UIFloatMenu title"
-menu.header.subTitle = "UIFloatMenu subtitle"
+menu.header.subtitle = "UIFloatMenu subtitle"
 menu.header.showHeader = true
 menu.header.showLine = true
 menu.header.lineInset = 15
@@ -127,7 +130,11 @@ menu.delegate.textField = self
 ```
 
 ```swift
-func UIFloatMenuGetTextFieldData(_ data: [String]) {
-    print("TextField -", data)
+func UIFloatMenuGetTextFieldData(_ rows: [TextFieldRow]) {
+    let login = UIFloatMenuHelper.find(rows, by: "Login")
+    let password = UIFloatMenuHelper.find(rows, by: "Password")
+
+    print("Login -", login)
+    print("Password -", password)
 }
 ```

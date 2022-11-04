@@ -5,6 +5,18 @@
 
 import UIKit
 
+//MARK: - selectionConfig
+public enum selectionConfig {
+    case multi(isSelected: Bool = false, selectedIcon: UIImage?, selectedTitle: String, defaultIcon: UIImage?, defaultTitle: String)
+    case `default`(icon: UIImage? = nil, title: String)
+}
+
+//MARK: - transition_style
+public enum transition_style {
+    case `default`(animated: Bool = true)
+    case fade
+}
+
 //MARK: - h_heightStyle
 public enum h_heightStyle {
     case compact
@@ -53,18 +65,20 @@ public enum spacerType {
     case divider
 }
 
+
+
 //MARK: - itemSetup
 public enum itemSetup {
     /**
     UIFloatMenu: ActionCell
     
-    - Parameter icon: Optional
-    - Parameter title: Title
+    - Parameter selection: selectionConfig **(.multi - with 2 state, .default)**
     - Parameter subtitle: Optional
     - Parameter layout: Loyout of cell (**.Title_Icon**, **.Icon_Title**), Default: **.Title_Icon**.
     - Parameter height: Height of cell (**.standard**,  **.compact**), Default: **.standard**.
     */
-    case ActionCell(icon: UIImage? = nil, title: String, subtitle: String = "", layout: cellLayout = .Title_Icon, height: heightStyle = .standard)
+    case ActionCell(selection: selectionConfig, subtitle: String = "", itemColor: itemColor = .standard,
+                    layout: cellLayout = .Icon_Title, height: heightStyle = .standard)
     
     /**
     UIFloatMenu: Title
@@ -101,7 +115,7 @@ public enum itemSetup {
     - Parameter keyboard: UIKeyboardType
     */
     case TextFieldCell(title: String = "", placeholder: String, isResponder: Bool = false,
-                       isSecure: Bool = false, content: UITextContentType? = nil, keyboard: UIKeyboardType = .default)
+                       isSecure: Bool = false, content: UITextContentType? = nil, keyboard: UIKeyboardType = .default, identifier: String = "")
     
     /**
     UIFloatMenu: SwitchCell
@@ -110,7 +124,7 @@ public enum itemSetup {
     - Parameter title: Title
     - Parameter isOn: Is On at start
     - Parameter tintColor: Tint color
-    - Parameter action: Action for Switch
+    - Parameter action: Selector for Switch
     */
     case SwitchCell(icon: UIImage? = nil, title: String, isOn: Bool = false, tintColor: UIColor = .systemBlue, action: Selector)
     
@@ -120,16 +134,25 @@ public enum itemSetup {
     - Parameter title: Optional
     - Parameter items: Items **[UIImage, String]**
     - Parameter selected: Selected item
-    - Parameter action: Action for SegmentControl
+    - Parameter action: Selector for SegmentControl
     */
     case SegmentCell(title: String = "", items: [Any], selected: Int = 0, action: Selector)
     
     /**
     UIFloatMenu: HorizontalCell
     
-    - Parameter items: [UIFloatMenuAction]
+    - Parameter items: actions [UIFloatMenuAction]
+    - Parameter height: h_heightStyle
+    - Parameter layout: h_cellLayout
     */
     case HorizontalCell(items: [UIFloatMenuAction], height: h_heightStyle = .standard, layout: h_cellLayout = .center)
+    
+    /**
+    UIFloatMenu: CustomCell
+    
+    - Parameter view: custom UIView
+    */
+    case CustomCell(view: UIView)
 }
 
 public typealias UIFloatMenuActionHandler = (UIFloatMenuAction) -> Void
@@ -143,11 +166,6 @@ public class UIFloatMenuAction {
     public var item: itemSetup
     
     /**
-    UIFloatMenu: itemColor
-    */
-    public var itemColor: itemColor
-    
-    /**
     UIFloatMenu: closeOnTap
     */
     public var closeOnTap: Bool
@@ -157,13 +175,15 @@ public class UIFloatMenuAction {
     */
     public var action: UIFloatMenuActionHandler?
     
+    /**
+    UIFloatMenu: isSelected
+    */
+    public var isSelected: Bool?
+    
     public init(item: itemSetup,
-                itemColor: itemColor = .standard,
                 closeOnTap: Bool = true,
                 action: UIFloatMenuActionHandler? = nil) {
         self.item = item
-        
-        self.itemColor = itemColor
         
         self.closeOnTap = closeOnTap
         self.action = action

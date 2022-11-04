@@ -42,6 +42,7 @@ class UIFloatMenuController: UIViewController, UIGestureRecognizerDelegate {
     // MARK: - deinit
     deinit {
         NotificationCenter.default.removeObserver(self, name: NSNotification.Name(rawValue: "UIFloatMenuClose"), object: nil)
+        NotificationCenter.default.removeObserver(self, name: NSNotification.Name(rawValue: "UIFloatMenuClose_all"), object: nil)
     }
     
     // MARK: - viewDidLoad
@@ -51,12 +52,15 @@ class UIFloatMenuController: UIViewController, UIGestureRecognizerDelegate {
         backgroundView.frame = view.frame
         backgroundView.autoresizingMask = [.flexibleWidth, .flexibleHeight]
         
-        let tap = UITapGestureRecognizer(target: self, action: #selector(tapClose))
+        let tap = UITapGestureRecognizer(target: self, action: #selector(tapClose_background))
         tap.delegate = self
         tap.cancelsTouchesInView = false
         backgroundView.addGestureRecognizer(tap)
         
-        NotificationCenter.default.addObserver(self, selector: #selector(tapClose), name: NSNotification.Name(rawValue: "UIFloatMenuClose"), object: nil)
+        NotificationCenter.default.addObserver(self, selector: #selector(tapClose_background),
+                                               name: NSNotification.Name(rawValue: "UIFloatMenuClose_all"), object: nil)
+        NotificationCenter.default.addObserver(self, selector: #selector(tapClose(_:)),
+                                               name: NSNotification.Name(rawValue: "UIFloatMenuClose"), object: nil)
     }
     
     // MARK: - viewDidAppear
@@ -75,16 +79,10 @@ class UIFloatMenuController: UIViewController, UIGestureRecognizerDelegate {
             }
         }
         
-        queue.append(.init(uuid: UIFloatMenuID.backViewID, config: config, actions: actions))
+        queue.append(.init(uuid: UIFloatMenuID.backViewID, header: header, config: config, actions: actions))
         
         let menu = UIFloatMenu.self
-        
-        menu.currentVC = currentVC
-        menu.headerConfig = header
-        menu.viewConfig = config
-        menu.delegate.close = delegate.close
-        menu.delegate.textField = delegate.textField
-        menu.show(self, actions: actions)
+        menu.show(container_VC: self, source_VC: currentVC, headerConfig: header, viewConfig: config, delegate: delegate, actions: actions)
     }
     
     // MARK: - prefersHomeIndicatorAutoHidden
@@ -98,8 +96,8 @@ class UIFloatMenuController: UIViewController, UIGestureRecognizerDelegate {
         vc.present(self, animated: false)
     }
     
-    // MARK: - tapClose
-    @objc private func tapClose() {
+    // MARK: - tapClose_background
+    @objc private func tapClose_background() {
         view.endEditing(true)
         UIView.animate(withDuration: 0.2) {
             self.backgroundView.backgroundColor = .clear
@@ -111,6 +109,29 @@ class UIFloatMenuController: UIViewController, UIGestureRecognizerDelegate {
         
         if delegate.close != nil {
             delegate.close?.UIFloatMenuDidCloseMenu()
+        }
+    }
+    
+    // MARK: - tapClose
+    @objc private func tapClose(_ notification: NSNotification) {
+        if UIFloatMenu.queue.count > 1 {
+            UIFloatMenu.showPrevious()
+        } else {
+            view.endEditing(true)
+            UIView.animate(withDuration: 0.2) {
+                self.backgroundView.backgroundColor = .clear
+            }
+            
+            UIFloatMenu.closeMenu(completion: {
+                self.dismiss(animated: false, completion: nil)
+                if let row = notification.userInfo?["row"] as? UIFloatMenuAction {
+                    row.action!(row)
+                }
+            })
+            
+            if delegate.close != nil {
+                delegate.close?.UIFloatMenuDidCloseMenu()
+            }
         }
     }
     
@@ -132,36 +153,38 @@ class UIFloatMenuController: UIViewController, UIGestureRecognizerDelegate {
             let device = UIDevice.current.userInterfaceIdiom
             let menu = UIFloatMenu.self
             
-            if let menuView = self.view.viewWithTag(UIFloatMenuID.backViewID) {
-                if device == .pad {
-                    let last = (queue.last?.config.presentation)!
-                    if case .rightDown(_) = last {
-                        menu.showTo(menuView, positions: .default)
-                    } else if case .rightUp(_) = last {
-                        menu.showTo(menuView, positions: .default, animation: false)
-                    } else if case .leftUp(_) = last {
-                        menu.showTo(menuView, positions: .default)
-                    } else if case .leftDown(_) = last {
-                        menu.showTo(menuView, positions: .default)
-                    } else if case .default = last {
-                        menu.showTo(menuView, positions: .default, animation: false)
+            for index in 0..<UIFloatMenu.queue.count {
+                if let menuView = self.view.viewWithTag(UIFloatMenu.queue[index].uuid) {
+                    if device == .pad {
+                        let presentation = (UIFloatMenu.queue[index].config.presentation)!
+                        if case .rightDown(_) = presentation {
+                            menu.showTo(menuView, positions: .default, animation: .default(animated: false))
+                        } else if case .rightUp(_) = presentation {
+                            menu.showTo(menuView, positions: .default, animation: .default(animated: false))
+                        } else if case .leftUp(_) = presentation {
+                            menu.showTo(menuView, positions: .default, animation: .default(animated: false))
+                        } else if case .leftDown(_) = presentation {
+                            menu.showTo(menuView, positions: .default, animation: .default(animated: false))
+                        } else if case .default = presentation {
+                            menu.showTo(menuView, positions: .default, animation: .default(animated: false))
+                        } else {
+                            menu.showTo(menuView, positions: presentation, iPad_window_width: 0)
+                        }
                     } else {
-                        menu.showTo(menuView, positions: last, iPad_window_width: 0)
-                    }
-                } else {
-                    let last = (queue.last?.config.presentation)!
-                    if case .rightDown(_) = last {
-                        menu.showTo(menuView, positions: .default, animation: false)
-                    } else if case .rightUp(_) = last {
-                        menu.showTo(menuView, positions: .default, animation: false)
-                    } else if case .leftUp(_) = last {
-                        menu.showTo(menuView, positions: .default, animation: false)
-                    } else if case .leftDown(_) = last {
-                        menu.showTo(menuView, positions: .default, animation: false)
-                    } else if case .default = last {
-                        menu.showTo(menuView, positions: .default, animation: false)
-                    } else {
-                        menu.showTo(menuView, positions: last, iPad_window_width: 0)
+                        let presentation = (UIFloatMenu.queue[index].config.presentation)!
+                        if case .rightDown(_) = presentation {
+                            menu.showTo(menuView, positions: .default, animation: .default(animated: false))
+                        } else if case .rightUp(_) = presentation {
+                            menu.showTo(menuView, positions: .default, animation: .default(animated: false))
+                        } else if case .leftUp(_) = presentation {
+                            menu.showTo(menuView, positions: .default, animation: .default(animated: false))
+                        } else if case .leftDown(_) = presentation {
+                            menu.showTo(menuView, positions: .default, animation: .default(animated: false))
+                        } else if case .default = presentation {
+                            menu.showTo(menuView, positions: .default, animation: .default(animated: false))
+                        } else {
+                            menu.showTo(menuView, positions: presentation, iPad_window_width: 0)
+                        }
                     }
                 }
             }
@@ -179,47 +202,49 @@ class UIFloatMenuController: UIViewController, UIGestureRecognizerDelegate {
         let device = UIDevice.current.userInterfaceIdiom
         let menu = UIFloatMenu.self
         coordinator.animate(alongsideTransition: { (context) in
-            if let menuView = self.view.viewWithTag(UIFloatMenuID.backViewID) {
-                if device == .pad {
-                    let layout = Layout.determineLayout()
-                    
-                    let last = (self.queue.last?.config.presentation)!
-                    let position: UIFloatMenuPresentStyle!
-                    
-                    if case .default = last {
-                        position = .default
-                        for gesture in menuView.gestureRecognizers! {
-                            gesture.isEnabled = true
-                        }
-                    } else if case .center = last {
-                        position = .center
-                        for gesture in menuView.gestureRecognizers! {
-                            gesture.isEnabled = false
-                        }
-                    } else {
-                        if layout == .iPadOneThirdScreen {
+            for index in 0..<UIFloatMenu.queue.count {
+                if let menuView = self.view.viewWithTag(UIFloatMenu.queue[index].uuid) {
+                    if device == .pad {
+                        let layout = Layout.determineLayout()
+
+                        let current_presentation = (UIFloatMenu.queue[index].config.presentation)!
+                        let position: UIFloatMenuPresentStyle!
+
+                        if case .default = current_presentation {
                             position = .default
                             for gesture in menuView.gestureRecognizers! {
                                 gesture.isEnabled = true
                             }
-                        } else if layout == .iPadHalfScreen || layout == .iPadTwoThirdScreen {
-                            position = last
+                        } else if case .center = current_presentation {
+                            position = .center
                             for gesture in menuView.gestureRecognizers! {
                                 gesture.isEnabled = false
                             }
                         } else {
-                            position = last
-                            for gesture in menuView.gestureRecognizers! {
-                                gesture.isEnabled = false
+                            if layout == .iPadOneThirdScreen {
+                                position = .default
+                                for gesture in menuView.gestureRecognizers! {
+                                    gesture.isEnabled = true
+                                }
+                            } else if layout == .iPadHalfScreen || layout == .iPadTwoThirdScreen {
+                                position = current_presentation
+                                for gesture in menuView.gestureRecognizers! {
+                                    gesture.isEnabled = false
+                                }
+                            } else {
+                                position = current_presentation
+                                for gesture in menuView.gestureRecognizers! {
+                                    gesture.isEnabled = false
+                                }
                             }
                         }
-                    }
-                    menu.showTo(menuView, positions: position, iPad_window_width: 0, animation: false)
-                } else if device == .phone {
-                    if Orientation.isLandscape {
-                        menuView.center = self.view.center
-                    } else {
-                        menu.showTo(menuView, positions: UIFloatMenuHelper.correctPosition((self.queue.last?.config.presentation)!), animation: false)
+                        menu.showTo(menuView, positions: position, iPad_window_width: 0, animation: .default(animated: false))
+                    } else if device == .phone {
+                        if Orientation.isLandscape {
+                            menuView.center = self.view.center
+                        } else {
+                            menu.showTo(menuView, positions: UIFloatMenuHelper.correctPosition((self.queue.last?.config.presentation)!), animation: .default(animated: false))
+                        }
                     }
                 }
             }

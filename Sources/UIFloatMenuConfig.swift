@@ -111,7 +111,6 @@ public struct UIFloatMenuHeaderConfig {
      Default: **true**.
     */
     public var showHeader: Bool
-    public var image: UIImage?
     
     /**
      UIFloatMenu: Title of header
@@ -121,7 +120,7 @@ public struct UIFloatMenuHeaderConfig {
     /**
      UIFloatMenu: Subtitle of header (optional)
     */
-    public var subTitle: String?
+    public var subtitle: String?
     
     /**
      UIFloatMenu: Show line under header
@@ -137,13 +136,12 @@ public struct UIFloatMenuHeaderConfig {
     */
     public var lineInset: CGFloat
     
-    public init(showHeader: Bool = true, image: UIImage? = nil, title: String = "", subTitle: String? = "",
+    public init(showHeader: Bool = true, title: String = "", subtitle: String? = "",
                 showLine: Bool = true, lineInset: CGFloat = 15) {
         self.showHeader = showHeader
-        self.image = image
         
         self.title = title
-        self.subTitle = subTitle
+        self.subtitle = subtitle
         
         self.showLine = showLine
         self.lineInset = lineInset
@@ -156,12 +154,14 @@ public struct UIFloatMenuQueue {
     
     public var uuid: Int!
     public var viewHeight: CGFloat!
+    public var header: UIFloatMenuHeaderConfig!
     public var config: UIFloatMenuConfig!
     public var actions: [UIFloatMenuAction]!
     
-    public init(uuid: Int, viewHeight: CGFloat = 0, config: UIFloatMenuConfig, actions: [UIFloatMenuAction]) {
+    public init(uuid: Int, viewHeight: CGFloat = 0, header: UIFloatMenuHeaderConfig, config: UIFloatMenuConfig, actions: [UIFloatMenuAction]) {
         self.uuid = uuid
         self.viewHeight = viewHeight
+        self.header = header
         self.config = config
         self.actions = actions
     }
@@ -174,13 +174,13 @@ class UIFloatMenuID {
     let shared = UIFloatMenuID()
     
     static let backViewID = 100010001
+    static let containerViewID = 11223300332211
     
     static func genUUID(_ count: Int) -> Int {
         if count == 0 {
             return backViewID
-        } else {
-            return backViewID+count
         }
+        return backViewID+count
     }
     
 }
@@ -189,7 +189,16 @@ class UIFloatMenuColors {
     
     let shared = UIFloatMenuColors()
     
-    static let mainColor = UIColor(named: "UIMenuMainColor")
+    //static let mainColor = UIColor(named: "UIMenuMainColor")
     static let revColor = UIColor(named: "UIMenuRevColor")
+    
+    static func mainColor() -> UIColor {
+        let light = UIColor(red: 250/255, green: 250/255, blue: 249/255, alpha: 1)
+        let dark = UIColor(red: 39/255, green: 44/255, blue: 49/255, alpha: 1)
+        
+        return UIColor { (trait) -> UIColor in
+            return trait.userInterfaceStyle == .light ? light : dark
+        }
+    }
     
 }

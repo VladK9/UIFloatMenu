@@ -23,6 +23,8 @@ class UIFloatMenuTitleCell: UITableViewCell {
         selectionStyle = .none
         isUserInteractionEnabled = false
         backgroundColor = .clear
+        
+        contentView.addSubview(titleLabel)
     }
     
     required init?(coder: NSCoder) {
@@ -32,8 +34,6 @@ class UIFloatMenuTitleCell: UITableViewCell {
     // MARK: layoutSubviews
     override func layoutSubviews() {
         super.layoutSubviews()
-        contentView.addSubview(titleLabel)
-        
         titleLabel.frame.size = CGSize(width: frame.width-50, height: 20)
         titleLabel.center.y = frame.height/2
         titleLabel.frame.origin.x = 10

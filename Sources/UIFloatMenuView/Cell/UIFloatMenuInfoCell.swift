@@ -39,6 +39,25 @@ class UIFloatMenuInfoCell: UITableViewCell {
         super.init(style: style, reuseIdentifier: reuseIdentifier)
         selectionStyle = .none
         backgroundColor = .clear
+        
+        contentView.addSubview(backView)
+        
+        contentStackView.axis = .horizontal
+        contentStackView.spacing = 9
+        contentStackView.alignment = .center
+        contentStackView.distribution = .fillProportionally
+        contentStackView.translatesAutoresizingMaskIntoConstraints = false
+        backView.addSubview(contentStackView)
+        
+        NSLayoutConstraint.activate([
+            contentStackView.topAnchor.constraint(equalTo: backView.topAnchor, constant: 2),
+            contentStackView.leadingAnchor.constraint(equalTo: backView.leadingAnchor, constant: 14),
+            contentStackView.bottomAnchor.constraint(equalTo: backView.bottomAnchor, constant: -2),
+            contentStackView.trailingAnchor.constraint(equalTo: backView.trailingAnchor, constant: -14),
+            iconImageView.heightAnchor.constraint(equalToConstant: 20),
+            iconImageView.widthAnchor.constraint(equalToConstant: 20),
+            titleLabel.heightAnchor.constraint(equalToConstant: 30)
+        ])
     }
     
     required init?(coder: NSCoder) {
@@ -58,8 +77,6 @@ class UIFloatMenuInfoCell: UITableViewCell {
     // MARK: layoutSubviews
     override func layoutSubviews() {
         super.layoutSubviews()
-        contentView.addSubview(backView)
-        
         if iconImageView.image == nil {
             contentStackView.addArrangedSubview(titleLabel)
         } else {
@@ -70,22 +87,5 @@ class UIFloatMenuInfoCell: UITableViewCell {
         backView.frame.size = CGSize(width: frame.width-20, height: frame.height-4)
         backView.center.x = frame.width/2
         backView.center.y = frame.height/2
-        
-        contentStackView.axis = .horizontal
-        contentStackView.spacing = 9
-        contentStackView.alignment = .center
-        contentStackView.distribution = .fillProportionally
-        contentStackView.translatesAutoresizingMaskIntoConstraints = false
-        backView.addSubview(contentStackView)
-        
-        NSLayoutConstraint.activate([
-            contentStackView.topAnchor.constraint(equalTo: backView.topAnchor, constant: 2),
-            contentStackView.leadingAnchor.constraint(equalTo: backView.leadingAnchor, constant: 10),
-            contentStackView.bottomAnchor.constraint(equalTo: backView.bottomAnchor, constant: -2),
-            contentStackView.trailingAnchor.constraint(equalTo: backView.trailingAnchor, constant: -10),
-            iconImageView.heightAnchor.constraint(equalToConstant: 20),
-            iconImageView.widthAnchor.constraint(equalToConstant: 20),
-            titleLabel.heightAnchor.constraint(equalToConstant: 30)
-        ])
     }
 }

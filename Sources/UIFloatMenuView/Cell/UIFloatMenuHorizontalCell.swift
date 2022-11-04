@@ -22,7 +22,7 @@ class HorizontalView: UIView, UICollectionViewDelegate, UICollectionViewDataSour
         
         itemsView.backgroundColor = .clear
         itemsView.isScrollEnabled = true
-        itemsView.allowsMultipleSelection = false
+        itemsView.allowsMultipleSelection = true
         itemsView.showsHorizontalScrollIndicator = false
         
         layout.scrollDirection = .horizontal
@@ -47,11 +47,27 @@ class HorizontalView: UIView, UICollectionViewDelegate, UICollectionViewDataSour
         cell.heightStyle = heightStyle
         cell.layout = layout
         
-        if case .ActionCell(let icon, let title, _, _, _) = item.item {
-            let templateIcon = icon?.withRenderingMode(.alwaysTemplate)
-            cell.iconView.image = templateIcon
-            cell.iconView.tintColor = UIFloatMenuColors.revColor
-            cell.titleLabel.text = title
+        if case .ActionCell(let selection, _, _, _, _) = item.item {
+            if case .default(let icon, let title) = selection {
+                let templateIcon = icon?.withRenderingMode(.alwaysTemplate)
+                cell.iconImageView.image = templateIcon
+                cell.titleLabel.text = title
+            } else if case .multi(let isSelected,
+                                  let selectedIcon, let selectedTitle,
+                                  let defaultIcon, let defaultTitle) = selection {
+                
+                cell.selection = selection
+                if isSelected {
+                    cell.iconImageView.image = selectedIcon
+                    cell.titleLabel.text = selectedTitle
+                    cell.isSelected = true
+                } else {
+                    cell.iconImageView.image = defaultIcon
+                    cell.titleLabel.text = defaultTitle
+                    cell.isSelected = false
+                }
+            }
+            cell.iconImageView.tintColor = UIFloatMenuColors.revColor
         }
         
         if #available(iOS 13.4, *) {
@@ -65,8 +81,43 @@ class HorizontalView: UIView, UICollectionViewDelegate, UICollectionViewDataSour
     func collectionView(_ collectionView: UICollectionView, didSelectItemAt indexPath: IndexPath) {
         let row = items[indexPath.item]
         
-        if case .ActionCell = row.item {
-            row.action!(row)
+        if case .ActionCell(let selection, _, _, _, _) = row.item {
+            if case .multi(_, _, _, _, _) = selection {
+                row.isSelected = true
+                row.action!(row)
+            } else {
+                if !row.closeOnTap {
+                    row.action!(row)
+                } else {
+                    NotificationCenter.default.post(name: NSNotification.Name("UIFloatMenuClose"), object: nil,
+                                                    userInfo: ["row": row])
+                }
+            }
+        } else if case .CustomCell(_) = row.item {
+            if !row.closeOnTap {
+                row.action!(row)
+            } else {
+                NotificationCenter.default.post(name: NSNotification.Name("UIFloatMenuClose"), object: nil,
+                                                userInfo: ["row": row])
+            }
+        }
+    }
+    
+    func collectionView(_ collectionView: UICollectionView, didDeselectItemAt indexPath: IndexPath) {
+        let row = items[indexPath.item]
+        
+        if case .ActionCell(let selection, _, _, _, _) = row.item {
+            if case .multi(_, _, _, _, _) = selection {
+                row.isSelected = false
+                row.action!(row)
+            } else {
+                row.action!(row)
+                if row.closeOnTap {
+                    NotificationCenter.default.post(name: NSNotification.Name("UIFloatMenuClose"), object: nil)
+                }
+            }
+        } else if case .CustomCell(_) = row.item {
+            row.action?(row)
             if row.closeOnTap {
                 NotificationCenter.default.post(name: NSNotification.Name("UIFloatMenuClose"), object: nil)
             }
@@ -80,7 +131,7 @@ class HorizontalView: UIView, UICollectionViewDelegate, UICollectionViewDataSour
         let full_width = viewSize.width-20-(5*(count-1))
         
         var item: CGSize {
-            if count >= 4 { //more then 4 items or 4
+            if count >= 4 {
                 return CGSize(width: (Double(full_width)/Double(4)), height: viewHeight-4)
             }
             return CGSize(width: (Double(full_width)/Double(count)), height: viewHeight-4)
@@ -172,12 +223,24 @@ class HorizontalItemCell: UICollectionViewCell {
     var heightStyle: h_heightStyle!
     var layout: h_cellLayout!
     
+    var selection: selectionConfig!
+    
     private var contentStackView: UIStackView = UIStackView()
     
-    let iconView: UIImageView = {
+    var backView: UIView = {
+        let uiview = UIView()
+        uiview.backgroundColor = UIColor.lightGray.withAlphaComponent(0.08)
+        uiview.isUserInteractionEnabled = false
+        uiview.layer.cornerRadius = 7
+        uiview.layer.masksToBounds = true
+        uiview.layer.borderWidth = 0.6
+        uiview.layer.borderColor = UIColor.darkGray.withAlphaComponent(0.05).cgColor
+        return uiview
+    }()
+    
+    let iconImageView: UIImageView = {
         let imageView = UIImageView()
         imageView.contentMode = .scaleAspectFit
-        imageView.alpha = 0.85
         return imageView
     }()
     
@@ -187,78 +250,121 @@ class HorizontalItemCell: UICollectionViewCell {
         title.textAlignment = .center
         title.numberOfLines = 1
         title.font = UIFloatMenuHelper.roundedFont(fontSize: 13, weight: .medium)
+        title.alpha = 0.8
         return title
     }()
     
+    private var isReused: Bool = false
+    
+    override var isHighlighted: Bool {
+        didSet {
+            if isHighlighted {
+                backView.alpha = UIFloatMenuHelper.theme() == .dark ? 0.7 : 0.6
+            } else {
+                backView.alpha = 1
+            }
+        }
+    }
+    
+    override var isSelected: Bool {
+        didSet {
+            if case .multi(_, let selectedIcon, let selectedTitle, let defaultIcon, let defaultTitle) = selection {
+                if isSelected {
+                    titleLabel.text = selectedTitle
+                    if selectedIcon != nil {
+                        iconImageView.image = selectedIcon
+                    }
+                } else {
+                    titleLabel.text = defaultTitle
+                    if defaultIcon != nil {
+                        iconImageView.image = defaultIcon
+                    }
+                }
+            }
+        }
+    }
+    
+    override func prepareForReuse() {
+        super.prepareForReuse()
+        isReused = true
+    }
+    
     override func layoutSubviews() {
         super.layoutSubviews()
-        contentView.addSubview(contentStackView)
-        
-        switch layout {
-        case .Icon_Title:
-            contentStackView.addArrangedSubview(iconView)
-            contentStackView.addArrangedSubview(titleLabel)
-            contentStackView.axis = .horizontal
-            contentStackView.alignment = .center
-            contentStackView.distribution = .equalCentering
+        if !isReused {
+            contentView.addSubview(backView)
+            backView.frame.size = CGSize(width: frame.width, height: frame.height)
+            backView.center.x = frame.width/2
+            backView.center.y = frame.height/2
             
-            titleLabel.font = UIFloatMenuHelper.roundedFont(fontSize: 15, weight: .medium)
+            addSubview(contentStackView)
             
-            NSLayoutConstraint.activate([
-                contentStackView.topAnchor.constraint(equalTo: contentView.topAnchor, constant: 12),
-                contentStackView.leadingAnchor.constraint(equalTo: contentView.leadingAnchor, constant: 12),
-                contentStackView.bottomAnchor.constraint(equalTo: contentView.bottomAnchor, constant: -12),
-                contentStackView.trailingAnchor.constraint(equalTo: contentView.trailingAnchor, constant: -12),
-                iconView.heightAnchor.constraint(equalToConstant: 22),
-                iconView.widthAnchor.constraint(equalToConstant: 22)
-            ])
-            break
-        case .center:
-            contentStackView.addArrangedSubview(iconView)
-            contentStackView.addArrangedSubview(titleLabel)
-            contentStackView.axis = .vertical
-            contentStackView.distribution = .fill
+            switch layout {
+            case .Icon_Title:
+                contentStackView.addArrangedSubview(iconImageView)
+                contentStackView.addArrangedSubview(titleLabel)
+                contentStackView.axis = .horizontal
+                contentStackView.alignment = .center
+                contentStackView.distribution = .equalCentering
+                
+                titleLabel.font = UIFloatMenuHelper.roundedFont(fontSize: 15, weight: .semibold)
+                
+                NSLayoutConstraint.activate([
+                    contentStackView.topAnchor.constraint(equalTo: backView.topAnchor, constant: 14),
+                    contentStackView.leadingAnchor.constraint(equalTo: backView.leadingAnchor, constant: 14),
+                    contentStackView.bottomAnchor.constraint(equalTo: backView.bottomAnchor, constant: -14),
+                    contentStackView.trailingAnchor.constraint(equalTo: backView.trailingAnchor, constant: -14),
+                    iconImageView.heightAnchor.constraint(equalToConstant: 22),
+                    iconImageView.widthAnchor.constraint(equalToConstant: 22)
+                ])
+                break
+            case .center:
+                contentStackView.addArrangedSubview(iconImageView)
+                contentStackView.addArrangedSubview(titleLabel)
+                contentStackView.axis = .vertical
+                contentStackView.distribution = .fill
+                
+                NSLayoutConstraint.activate([
+                    contentStackView.topAnchor.constraint(equalTo: backView.topAnchor, constant: heightStyle == .compact ? 8 : 15),
+                    contentStackView.leadingAnchor.constraint(equalTo: backView.leadingAnchor, constant: 5),
+                    contentStackView.bottomAnchor.constraint(equalTo: backView.bottomAnchor, constant: heightStyle == .compact ? -8 : -10),
+                    contentStackView.trailingAnchor.constraint(equalTo: backView.trailingAnchor, constant: -5),
+                    iconImageView.heightAnchor.constraint(equalToConstant: 30),
+                    titleLabel.heightAnchor.constraint(equalToConstant: heightStyle == .compact ? 15 : 20)
+                ])
+                break
+            case .Title_Icon:
+                contentStackView.addArrangedSubview(titleLabel)
+                contentStackView.addArrangedSubview(iconImageView)
+                contentStackView.axis = .horizontal
+                contentStackView.alignment = .center
+                contentStackView.distribution = .equalCentering
+                
+                titleLabel.font = UIFloatMenuHelper.roundedFont(fontSize: 15, weight: .semibold)
+                
+                NSLayoutConstraint.activate([
+                    contentStackView.topAnchor.constraint(equalTo: backView.topAnchor, constant: 14),
+                    contentStackView.leadingAnchor.constraint(equalTo: backView.leadingAnchor, constant: 14),
+                    contentStackView.bottomAnchor.constraint(equalTo: backView.bottomAnchor, constant: -14),
+                    contentStackView.trailingAnchor.constraint(equalTo: backView.trailingAnchor, constant: -14),
+                    iconImageView.heightAnchor.constraint(equalToConstant: 22),
+                    iconImageView.widthAnchor.constraint(equalToConstant: 22)
+                ])
+                break
+            case .none:
+                break
+            }
             
-            NSLayoutConstraint.activate([
-                contentStackView.topAnchor.constraint(equalTo: contentView.topAnchor, constant: heightStyle == .compact ? 8 : 15),
-                contentStackView.leadingAnchor.constraint(equalTo: contentView.leadingAnchor, constant: 5),
-                contentStackView.bottomAnchor.constraint(equalTo: contentView.bottomAnchor, constant: heightStyle == .compact ? -8 : -10),
-                contentStackView.trailingAnchor.constraint(equalTo: contentView.trailingAnchor, constant: -5),
-                iconView.heightAnchor.constraint(equalToConstant: 30),
-                titleLabel.heightAnchor.constraint(equalToConstant: heightStyle == .compact ? 15 : 20)
-            ])
-            break
-        case .Title_Icon:
-            contentStackView.addArrangedSubview(titleLabel)
-            contentStackView.addArrangedSubview(iconView)
-            contentStackView.axis = .horizontal
-            contentStackView.alignment = .center
-            contentStackView.distribution = .equalCentering
-            
-            titleLabel.font = UIFloatMenuHelper.roundedFont(fontSize: 15, weight: .medium)
-            
-            NSLayoutConstraint.activate([
-                contentStackView.topAnchor.constraint(equalTo: contentView.topAnchor, constant: 12),
-                contentStackView.leadingAnchor.constraint(equalTo: contentView.leadingAnchor, constant: 12),
-                contentStackView.bottomAnchor.constraint(equalTo: contentView.bottomAnchor, constant: -12),
-                contentStackView.trailingAnchor.constraint(equalTo: contentView.trailingAnchor, constant: -12),
-                iconView.heightAnchor.constraint(equalToConstant: 22),
-                iconView.widthAnchor.constraint(equalToConstant: 22)
-            ])
-            break
-        case .none:
-            break
+            contentStackView.spacing = 2
+            contentStackView.isUserInteractionEnabled = false
+            contentStackView.translatesAutoresizingMaskIntoConstraints = false
         }
-        
-        contentStackView.spacing = 2
-        contentStackView.isUserInteractionEnabled = false
-        contentStackView.translatesAutoresizingMaskIntoConstraints = false
     }
     
     override init(frame: CGRect) {
         super.init(frame: frame)
         layer.cornerRadius = 7
-        backgroundColor = UIColor.lightGray.withAlphaComponent(0.12)
+        backgroundColor = .clear
     }
     
     required init?(coder aDecoder: NSCoder) {
@@ -267,10 +373,17 @@ class HorizontalItemCell: UICollectionViewCell {
     
 }
 
-//MARK: - UIFloatMenuHorizontalCell
+// MARK: UIFloatMenuHorizontalCell
 class UIFloatMenuHorizontalCell: UITableViewCell {
     
-    // MARK: init
+    var items = [UIFloatMenuAction]()
+    var viewSize: CGSize!
+    var heightStyle: h_heightStyle!
+    var layout: h_cellLayout!
+    
+    private var isReused: Bool = false
+    private var isLoaded: Bool = false
+    
     override init(style: UITableViewCell.CellStyle, reuseIdentifier: String?) {
         super.init(style: style, reuseIdentifier: reuseIdentifier)
         selectionStyle = .none
@@ -281,9 +394,20 @@ class UIFloatMenuHorizontalCell: UITableViewCell {
         fatalError("init(coder:) has not been implemented")
     }
     
-    // MARK: layoutSubviews
+    override func prepareForReuse() {
+        super.prepareForReuse()
+        isReused = true
+        isLoaded = true
+    }
+    
     override func layoutSubviews() {
         super.layoutSubviews()
+        if !isReused && isLoaded == false {
+            let h_view = HorizontalView.init(items: items, viewSize: viewSize, height: heightStyle, layout: layout)
+            contentView.addSubview(h_view)
+            h_view.frame.origin = .zero
+        }
+        isLoaded = true
     }
     
 }

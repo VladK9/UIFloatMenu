@@ -30,6 +30,9 @@ class UIFloatMenuTextFieldCell: UITableViewCell {
         super.init(style: style, reuseIdentifier: reuseIdentifier)
         selectionStyle = .none
         backgroundColor = .clear
+        
+        contentView.addSubview(backView)
+        backView.addSubview(TextField)
     }
     
     required init?(coder: NSCoder) {
@@ -39,13 +42,26 @@ class UIFloatMenuTextFieldCell: UITableViewCell {
     // MARK: layoutSubviews
     override func layoutSubviews() {
         super.layoutSubviews()
-        contentView.addSubview(backView)
-        
-        backView.addSubview(TextField)
         backView.frame.size = CGSize(width: frame.width-20, height: frame.height-5)
         backView.center.x = frame.width/2
         backView.center.y = frame.height/2
         
         TextField.frame = CGRect(x: 0, y: 0, width: backView.frame.size.width, height: backView.frame.size.height)
     }
+}
+
+fileprivate extension UITextField {
+    
+    func setLeftPadding(_ amount: CGFloat) {
+        let paddingView = UIView(frame: CGRect(x: 0, y: 0, width: amount, height: self.frame.size.height))
+        self.leftView = paddingView
+        self.leftViewMode = .always
+    }
+    
+    func setRightPadding(_ amount: CGFloat) {
+        let paddingView = UIView(frame: CGRect(x: 0, y: 0, width: amount, height: self.frame.size.height))
+        self.rightView = paddingView
+        self.rightViewMode = .always
+    }
+    
 }

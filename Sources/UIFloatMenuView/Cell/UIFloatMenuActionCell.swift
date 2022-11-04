@@ -11,9 +11,12 @@ class UIFloatMenuActionCell: UITableViewCell {
     var itemLayout: cellLayout!
     var itemHeight: heightStyle!
     
+    var selection: selectionConfig!
+    
     var initBackColor: UIColor!
     
     // MARK: Views
+    private var labelsStackView: UIStackView = UIStackView()
     private var contentStackView: UIStackView = UIStackView()
     
     var backView: UIView = {
@@ -54,6 +57,26 @@ class UIFloatMenuActionCell: UITableViewCell {
         super.init(style: style, reuseIdentifier: reuseIdentifier)
         selectionStyle = .none
         backgroundColor = .clear
+        
+        contentView.addSubview(backView)
+        
+        labelsStackView.axis = .vertical
+        labelsStackView.distribution = .fillProportionally
+        labelsStackView.translatesAutoresizingMaskIntoConstraints = false
+        
+        if subtitleLabel.text != "" {
+            labelsStackView.addArrangedSubview(titleLabel)
+            labelsStackView.addArrangedSubview(subtitleLabel)
+        } else {
+            labelsStackView.addArrangedSubview(titleLabel)
+        }
+        
+        contentStackView.axis = .horizontal
+        contentStackView.distribution = .fill
+        contentStackView.alignment = .fill
+        contentStackView.translatesAutoresizingMaskIntoConstraints = false
+        
+        addSubview(contentStackView)
     }
     
     required init?(coder: NSCoder) {
@@ -66,18 +89,16 @@ class UIFloatMenuActionCell: UITableViewCell {
         if highlighted {
             switch itemColor {
             case .clear:
-                let color = UIFloatMenuHelper.detectTheme(dark: UIColor.lightGray.withAlphaComponent(0.08),
-                                                     light: UIColor.lightGray.withAlphaComponent(0.12),
-                                                     any: UIColor.lightGray.withAlphaComponent(0.08))
-                backView.backgroundColor = color
+                backView.backgroundColor = UIColor.lightGray.withAlphaComponent(0.08)
                 break
             case .tinted(_):
+                backView.alpha = UIFloatMenuHelper.theme() == .dark ? 0.8 : 0.7
                 break
             case .filled(_):
                 backView.alpha = 0.9
                 break
             case .standard:
-                backView.alpha = 0.9
+                backView.alpha = UIFloatMenuHelper.theme() == .dark ? 0.7 : 0.6
                 break
             case .custom(_, let tintColor, let backColor):
                 if backColor == .clear {
@@ -96,29 +117,22 @@ class UIFloatMenuActionCell: UITableViewCell {
     // MARK: layoutSubviews
     override func layoutSubviews() {
         super.layoutSubviews()
-        contentView.addSubview(backView)
-        
-        if iconImageView.image != nil {
-            backView.addSubview(iconImageView)
-        }
-        
         backView.frame.size = CGSize(width: frame.width-20, height: frame.height-5)
         backView.center.x = frame.width/2
         backView.center.y = frame.height/2
         
-        contentStackView.axis = .vertical
-        contentStackView.distribution = .fillProportionally
-        
-        if subtitleLabel.text != "" {
-            contentStackView.addArrangedSubview(titleLabel)
-            contentStackView.addArrangedSubview(subtitleLabel)
+        if iconImageView.image != nil {
+            if case .Icon_Title = itemLayout {
+                contentStackView.addArrangedSubview(iconImageView)
+                contentStackView.addArrangedSubview(labelsStackView)
+            } else {
+                contentStackView.addArrangedSubview(labelsStackView)
+                contentStackView.addArrangedSubview(iconImageView)
+            }
+            contentStackView.spacing = 12
         } else {
-            contentStackView.addArrangedSubview(titleLabel)
+            contentStackView.addArrangedSubview(labelsStackView)
         }
-        
-        addSubview(contentStackView)
-        
-        contentStackView.translatesAutoresizingMaskIntoConstraints = false
         
         var top_bottom: CGFloat {
             switch itemHeight {
@@ -134,39 +148,16 @@ class UIFloatMenuActionCell: UITableViewCell {
             return 0
         }
         
-        switch itemLayout {
-        case .Icon_Title:
-            if iconImageView.image != nil {
-                iconImageView.frame.origin.x = 10
-            }
-            
-            NSLayoutConstraint.activate([
-                contentStackView.topAnchor.constraint(equalTo: backView.topAnchor, constant: top_bottom),
-                contentStackView.leadingAnchor.constraint(equalTo: backView.leadingAnchor, constant: iconImageView.image != nil ? 40 : 10),
-                contentStackView.bottomAnchor.constraint(equalTo: backView.bottomAnchor, constant: -top_bottom),
-                contentStackView.trailingAnchor.constraint(equalTo: backView.trailingAnchor, constant: -10)
-            ])
-            break
-        case .Title_Icon:
-            if iconImageView.image != nil {
-                iconImageView.frame.origin.x = backView.frame.width-35
-            }
-            
-            NSLayoutConstraint.activate([
-                contentStackView.topAnchor.constraint(equalTo: backView.topAnchor, constant: top_bottom),
-                contentStackView.leadingAnchor.constraint(equalTo: backView.leadingAnchor, constant: 10),
-                contentStackView.bottomAnchor.constraint(equalTo: backView.bottomAnchor, constant: -top_bottom),
-                contentStackView.trailingAnchor.constraint(equalTo: backView.trailingAnchor, constant: iconImageView.image != nil ? -40 : -10)
-            ])
-            break
-        case .none:
-            break
-        }
+        NSLayoutConstraint.activate([
+            iconImageView.heightAnchor.constraint(equalToConstant: 23),
+            iconImageView.widthAnchor.constraint(equalToConstant: 23),
+            contentStackView.topAnchor.constraint(equalTo: backView.topAnchor, constant: top_bottom),
+            contentStackView.leadingAnchor.constraint(equalTo: backView.leadingAnchor, constant: 14),
+            contentStackView.bottomAnchor.constraint(equalTo: backView.bottomAnchor, constant: -top_bottom),
+            contentStackView.trailingAnchor.constraint(equalTo: backView.trailingAnchor, constant: -14)
+        ])
         
-        contentStackView.isUserInteractionEnabled = false
-        
-        iconImageView.frame.size = CGSize(width: 23, height: 23)
-        iconImageView.center.y = backView.frame.height/2
+        backView.layer.borderWidth = 0.6
         
         switch itemColor {
         case .clear:
@@ -182,11 +173,12 @@ class UIFloatMenuActionCell: UITableViewCell {
                 iconImageView.image = templateImage
                 iconImageView.tintColor = color
             }
-            
+
             titleLabel.textColor = color
             subtitleLabel.textColor = color.withAlphaComponent(0.9)
-            
+
             backView.backgroundColor = color.withAlphaComponent(0.1)
+            backView.layer.borderColor = color.withAlphaComponent(0.05).cgColor
             break
         case .filled(let color):
             if iconImageView.image != nil {
@@ -194,11 +186,12 @@ class UIFloatMenuActionCell: UITableViewCell {
                 iconImageView.image = templateImage
                 iconImageView.tintColor = .white
             }
-            
+
             titleLabel.textColor = .white
             subtitleLabel.textColor = UIColor.white.withAlphaComponent(0.9)
-            
+
             backView.backgroundColor = color
+            backView.layer.borderColor = color.withAlphaComponent(0.05).cgColor
             break
         case .standard:
             if iconImageView.image != nil {
@@ -206,26 +199,46 @@ class UIFloatMenuActionCell: UITableViewCell {
                 iconImageView.image = templateImage
                 iconImageView.tintColor = UIFloatMenuColors.revColor
             }
-            
+
             titleLabel.textColor = UIFloatMenuColors.revColor
             subtitleLabel.textColor = UIFloatMenuColors.revColor
-            
+
             backView.backgroundColor = UIColor.lightGray.withAlphaComponent(0.08)
+            backView.layer.borderColor = UIColor.darkGray.withAlphaComponent(0.05).cgColor
             break
         case .custom(let iconColor, let textColor, let backColor):
             let image = iconColor != .clear ? iconImageView.image?.withRenderingMode(.alwaysTemplate) : iconImageView.image
             iconImageView.image = image
             iconImageView.tintColor = iconColor
-            
+
             titleLabel.textColor = textColor
             subtitleLabel.textColor = textColor.withAlphaComponent(0.9)
             
             if backColor != .clear {
                 backView.backgroundColor = backColor
+                backView.layer.borderColor = backColor.withAlphaComponent(0.05).cgColor
             }
             break
         case .none:
             break
         }
     }
+    
+    override func setSelected(_ selected: Bool, animated: Bool) {
+        super.setSelected(selected, animated: animated)
+        if case .multi(_, let selectedIcon, let selectedTitle, let defaultIcon, let defaultTitle) = selection {
+            if selected {
+                titleLabel.text = selectedTitle
+                if selectedIcon != nil {
+                    iconImageView.image = selectedIcon
+                }
+            } else {
+                titleLabel.text = defaultTitle
+                if defaultIcon != nil {
+                    iconImageView.image = defaultIcon
+                }
+            }
+        }
+    }
+    
 }
