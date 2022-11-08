@@ -15,8 +15,6 @@ class UIFloatMenu {
         return vc
     }
     
-    static private var containerView = ContainerView()
-    
     static private var container_VC = UIViewController()
     static private var source_VC = UIViewController()
     
@@ -335,7 +333,6 @@ class UIFloatMenu {
         
         var newView: UIView {
             if let new = container_VC.view.viewWithTag(id) {
-                //new.isHidden = true
                 return new
             }
             return UIView()
@@ -386,7 +383,6 @@ class UIFloatMenu {
             
             animator.addMovingAnimation(from: lastView, to: previousView, sourceView: previousView, in: previousView)
             animator.addCompletion({ _ in
-                showTo(containerView, positions: correct, animation: .fade)
                 lastView.removeFromSuperview()
                 queue.removeLast()
             })

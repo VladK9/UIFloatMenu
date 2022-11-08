@@ -194,7 +194,6 @@ class UIFloatMenuController: UIViewController, UIGestureRecognizerDelegate {
     // MARK: - detect device rotations
     override func viewWillTransition(to size: CGSize, with coordinator: UIViewControllerTransitionCoordinator) {
         super.viewWillTransition(to: size, with: coordinator)
-        
         UIView.animate(withDuration: 0.01) {
             self.backgroundView.autoresizingMask = [.flexibleWidth, .flexibleHeight]
         }
@@ -205,7 +204,7 @@ class UIFloatMenuController: UIViewController, UIGestureRecognizerDelegate {
             for index in 0..<UIFloatMenu.queue.count {
                 if let menuView = self.view.viewWithTag(UIFloatMenu.queue[index].uuid) {
                     if device == .pad {
-                        let layout = Layout.determineLayout()
+                        let layout = UIFloatMenuHelper.Layout.determineLayout()
 
                         let current_presentation = (UIFloatMenu.queue[index].config.presentation)!
                         let position: UIFloatMenuPresentStyle!
@@ -240,7 +239,7 @@ class UIFloatMenuController: UIViewController, UIGestureRecognizerDelegate {
                         }
                         menu.showTo(menuView, positions: position, iPad_window_width: 0, animation: .default(animated: false))
                     } else if device == .phone {
-                        if Orientation.isLandscape {
+                        if UIFloatMenuHelper.Orientation.isLandscape {
                             menuView.center = self.view.center
                         } else {
                             menu.showTo(menuView, positions: UIFloatMenuHelper.correctPosition((self.queue.last?.config.presentation)!), animation: .default(animated: false))

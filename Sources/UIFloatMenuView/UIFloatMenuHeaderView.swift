@@ -50,7 +50,7 @@ class UIFloatMenuHeaderView: UIView {
         super.init(frame: CGRect.zero)
         let appRect = UIApplication.shared.windows[0].bounds
         let device = UIDevice.current.userInterfaceIdiom
-        let width = (device == .pad ? menuConfig.viewWidth_iPad : (Orientation.isPortrait ? appRect.width-30 : appRect.width/2.5))!
+        let width = (device == .pad ? menuConfig.viewWidth_iPad : (UIFloatMenuHelper.Orientation.isPortrait ? appRect.width-30 : appRect.width/2.5))!
         
         self.headerConfig = headerConfig
         

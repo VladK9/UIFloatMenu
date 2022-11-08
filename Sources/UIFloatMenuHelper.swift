@@ -124,62 +124,58 @@ class UIFloatMenuHelper {
         return ""
     }
     
-}
+    // MARK: - Layout
+    struct Layout {
+        enum LayoutStyle: String {
+            case iPadFullScreen = "iPad Full Screen"
+            case iPadHalfScreen = "iPad 1/2 Screen"
+            case iPadTwoThirdScreen = "iPad 2/3 Screen"
+            case iPadOneThirdScreen = "iPad 1/3 Screen"
+            case iPhoneFullScreen = "iPhone"
+        }
+        
+        static func determineLayout() -> LayoutStyle {
+            if UIDevice.current.userInterfaceIdiom == .phone {
+                return .iPhoneFullScreen
+            }
+            
+            let screenSize = UIScreen.main.bounds.size
+            let appSize = UIApplication.shared.windows[0].bounds.size
+            let screenWidth = screenSize.width
+            let appWidth = appSize.width
+            
+            if screenSize == appSize {
+                 return .iPadFullScreen
+            }
+            
+            let persent = CGFloat(appWidth / screenWidth) * 100.0
+            
+            if persent <= 55.0 && persent >= 45.0 {
+                return .iPadHalfScreen
+            } else if persent > 55.0 {
+                return .iPadTwoThirdScreen
+            } else {
+                return .iPadOneThirdScreen
+            }
+        }
+    }
 
-// MARK: - Layout
-struct Layout {
-    
-    enum LayoutStyle: String {
-        case iPadFullScreen = "iPad Full Screen"
-        case iPadHalfScreen = "iPad 1/2 Screen"
-        case iPadTwoThirdScreen = "iPad 2/3 Screen"
-        case iPadOneThirdScreen = "iPad 1/3 Screen"
-        case iPhoneFullScreen = "iPhone"
-    }
-    
-    static func determineLayout() -> LayoutStyle {
-        if UIDevice.current.userInterfaceIdiom == .phone {
-            return .iPhoneFullScreen
+    // MARK: - Orientation
+    struct Orientation {
+        static var isLandscape: Bool {
+            get {
+                return UIDevice.current.orientation.isValidInterfaceOrientation
+                       ? UIDevice.current.orientation.isLandscape
+                       : (UIApplication.shared.windows.first?.windowScene?.interfaceOrientation.isLandscape)!
+            }
         }
         
-        let screenSize = UIScreen.main.bounds.size
-        let appSize = UIApplication.shared.windows[0].bounds.size
-        let screenWidth = screenSize.width
-        let appWidth = appSize.width
-        
-        if screenSize == appSize {
-             return .iPadFullScreen
-        }
-        
-        let persent = CGFloat(appWidth / screenWidth) * 100.0
-        
-        if persent <= 55.0 && persent >= 45.0 {
-            return .iPadHalfScreen
-        } else if persent > 55.0 {
-            return .iPadTwoThirdScreen
-        } else {
-            return .iPadOneThirdScreen
-        }
-    }
-    
-}
-
-// MARK: - Orientation
-struct Orientation {
-    
-    static var isLandscape: Bool {
-        get {
-            return UIDevice.current.orientation.isValidInterfaceOrientation
-                   ? UIDevice.current.orientation.isLandscape
-                   : (UIApplication.shared.windows.first?.windowScene?.interfaceOrientation.isLandscape)!
-        }
-    }
-    
-    static var isPortrait: Bool {
-        get {
-            return UIDevice.current.orientation.isValidInterfaceOrientation
-                   ? UIDevice.current.orientation.isPortrait
-                   : (UIApplication.shared.windows.first?.windowScene?.interfaceOrientation.isPortrait)!
+        static var isPortrait: Bool {
+            get {
+                return UIDevice.current.orientation.isValidInterfaceOrientation
+                       ? UIDevice.current.orientation.isPortrait
+                       : (UIApplication.shared.windows.first?.windowScene?.interfaceOrientation.isPortrait)!
+            }
         }
     }
 

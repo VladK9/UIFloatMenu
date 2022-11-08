@@ -381,7 +381,7 @@ class UIFloatMenuView: UIView, UITableViewDelegate, UITableViewDataSource, UIGes
         let appRect = UIApplication.shared.windows[0].bounds
         var topSpace: CGFloat {
             let device = UIDevice.current.userInterfaceIdiom
-            return device == .pad ? 250 : (Orientation.isLandscape ? 30 : 120)
+            return device == .pad ? 250 : (UIFloatMenuHelper.Orientation.isLandscape ? 30 : 120)
         }
         
         let maxH = appRect.height-topPadding-bottomPadding-topSpace
@@ -402,9 +402,9 @@ class UIFloatMenuView: UIView, UITableViewDelegate, UITableViewDataSource, UIGes
         if device == .pad {
             return currentWidth
         } else if device == .phone {
-            if Orientation.isLandscape {
+            if UIFloatMenuHelper.Orientation.isLandscape {
                 return appRect.height-30
-            } else if Orientation.isPortrait {
+            } else if UIFloatMenuHelper.Orientation.isPortrait {
                 return appRect.width-30
             }
         }
