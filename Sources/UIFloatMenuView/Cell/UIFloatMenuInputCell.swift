@@ -5,7 +5,9 @@
 
 import UIKit
 
-class UIFloatMenuTextFieldCell: UITableViewCell {
+class UIFloatMenuInputCell: UITableViewCell, UITextViewDelegate {
+    
+    var inputType: itemSetup.inputType!
     
     // MARK: Views
     lazy var backView: UIView = {
@@ -25,6 +27,14 @@ class UIFloatMenuTextFieldCell: UITableViewCell {
         return textF
     }()
     
+    var textLayer = CATextLayer()
+    lazy var TextView: UITextView = {
+        let textV = UITextView()
+        textV.font = UIFloatMenuHelper.roundedFont(fontSize: 17, weight: .regular)
+        textV.backgroundColor = .clear
+        return textV
+    }()
+    
     // MARK: init
     override init(style: UITableViewCell.CellStyle, reuseIdentifier: String?) {
         super.init(style: style, reuseIdentifier: reuseIdentifier)
@@ -33,6 +43,7 @@ class UIFloatMenuTextFieldCell: UITableViewCell {
         
         contentView.addSubview(backView)
         backView.addSubview(TextField)
+        backView.addSubview(TextView)
     }
     
     required init?(coder: NSCoder) {
@@ -46,8 +57,34 @@ class UIFloatMenuTextFieldCell: UITableViewCell {
         backView.center.x = frame.width/2
         backView.center.y = frame.height/2
         
-        TextField.frame = CGRect(x: 0, y: 0, width: backView.frame.size.width, height: backView.frame.size.height)
+        switch inputType {
+        case .textField(_,_,_,_):
+            TextField.frame = CGRect(x: 0, y: 0, width: backView.frame.size.width, height: backView.frame.size.height)
+        case .textView(_,_,_):
+            TextView.delegate = self
+            TextView.frame.size.height = backView.bounds.height-5
+            TextView.frame.size.width = backView.bounds.width-10
+            TextView.center.y = backView.bounds.height/2
+            TextView.center.x = backView.bounds.width/2
+            
+            textLayer.contentsScale = UIScreen.main.scale
+            textLayer.alignmentMode = .left
+            textLayer.isWrapped = true
+            textLayer.foregroundColor = UIFloatMenuColors.revColor?.withAlphaComponent(0.7).cgColor
+            textLayer.fontSize = 17
+            textLayer.font = UIFloatMenuHelper.roundedFont(fontSize: 17, weight: .regular)
+            textLayer.frame = TextView.bounds.insetBy(dx: 5, dy: 8)
+            TextView.layer.insertSublayer(textLayer, at: 0)
+        case .none:
+            break
+        }
     }
+    
+    //MARK: - textViewDidChange
+    func textViewDidChange(_ textView: UITextView) {
+        textLayer.isHidden = textView.text.isEmpty ? false : true
+    }
+    
 }
 
 fileprivate extension UITextField {

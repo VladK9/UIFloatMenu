@@ -8,6 +8,7 @@ import UIKit
 class UIFloatMenuHeaderView: UIView {
     
     private var stackView: UIStackView = UIStackView()
+    private var labelsStackView: UIStackView = UIStackView()
     
     var headerConfig = UIFloatMenuHeaderConfig()
     
@@ -26,11 +27,11 @@ class UIFloatMenuHeaderView: UIView {
         let label = UILabel()
         label.textAlignment = .left
         label.textColor = UIFloatMenuColors.revColor
-        label.font = UIFloatMenuHelper.roundedFont(fontSize: 11, weight: .regular)
+        label.font = UIFloatMenuHelper.roundedFont(fontSize: 11, weight: .semibold)
         return label
     }()
     
-    private var cancelButton: UIButton = {
+    private var closeButton: UIButton = {
         let button = UIButton(type: .system)
         button.setImage(UIImage(systemName: "multiply.circle.fill", withConfiguration: UIImage.SymbolConfiguration(textStyle: .title3)), for: .normal)
         button.setImage(UIImage(systemName: "multiply.circle.fill", withConfiguration: UIImage.SymbolConfiguration(textStyle: .title3)), for: .highlighted)
@@ -50,15 +51,16 @@ class UIFloatMenuHeaderView: UIView {
         super.init(frame: CGRect.zero)
         let appRect = UIApplication.shared.windows[0].bounds
         let device = UIDevice.current.userInterfaceIdiom
-        let width = (device == .pad ? menuConfig.viewWidth_iPad : (UIFloatMenuHelper.Orientation.isPortrait ? appRect.width-30 : appRect.width/2.5))!
+        let width = (device == .pad ? menuConfig.viewWidth : (UIFloatMenuHelper.Orientation.isPortrait ? appRect.width-30 : appRect.width/2.5))!
         
         self.headerConfig = headerConfig
         
-        addSubview(cancelButton)
-        backgroundColor = menuConfig.blurBackground ? .clear : UIFloatMenuColors.mainColor()
-        
         titleLabel.text = headerConfig.title
         subtitleLabel.text = headerConfig.subtitle
+        
+        labelsStackView.axis = .vertical
+        labelsStackView.distribution = .fillProportionally
+        labelsStackView.translatesAutoresizingMaskIntoConstraints = false
         
         if headerConfig.showLine {
             lineView.frame.size = CGSize(width: width-(headerConfig.lineInset*2), height: 1)
@@ -66,16 +68,22 @@ class UIFloatMenuHeaderView: UIView {
             addSubview(lineView)
         }
         
-        stackView.axis = .vertical
-        stackView.distribution = .fillProportionally
+        stackView.axis = .horizontal
+        stackView.distribution = .fill
         
         if headerConfig.title != "" && headerConfig.subtitle != "" {
-            stackView.addArrangedSubview(titleLabel)
-            stackView.addArrangedSubview(subtitleLabel)
+            labelsStackView.addArrangedSubview(titleLabel)
+            labelsStackView.addArrangedSubview(subtitleLabel)
         }
         
         if headerConfig.title != "" && headerConfig.subtitle == "" {
-            stackView.addArrangedSubview(titleLabel)
+            labelsStackView.addArrangedSubview(titleLabel)
+        }
+        
+        stackView.addArrangedSubview(labelsStackView)
+        
+        if headerConfig.showButton {
+            stackView.addArrangedSubview(closeButton)
         }
         
         addSubview(stackView)
@@ -83,16 +91,18 @@ class UIFloatMenuHeaderView: UIView {
         stackView.translatesAutoresizingMaskIntoConstraints = false
         
         NSLayoutConstraint.activate([
+            closeButton.heightAnchor.constraint(equalToConstant: 30),
+            closeButton.widthAnchor.constraint(equalToConstant: 40),
             stackView.topAnchor.constraint(equalTo: topAnchor, constant: 12),
             stackView.leadingAnchor.constraint(equalTo: leadingAnchor, constant: 15),
             stackView.bottomAnchor.constraint(equalTo: bottomAnchor, constant: -12),
-            stackView.trailingAnchor.constraint(equalTo: trailingAnchor, constant: -55),
+            stackView.trailingAnchor.constraint(equalTo: trailingAnchor, constant: -7)
         ])
         
         stackView.isUserInteractionEnabled = true
         
         let tap = UITapGestureRecognizer(target: self, action: #selector(tapClose(_:)))
-        cancelButton.addGestureRecognizer(tap)
+        closeButton.addGestureRecognizer(tap)
     }
     
     //MARK: - coder
@@ -103,10 +113,8 @@ class UIFloatMenuHeaderView: UIView {
     //MARK: - layoutSubviews
     override func layoutSubviews() {
         super.layoutSubviews()
-        cancelButton.frame = CGRect(x: frame.width-41, y: 0, width: 30, height: 30)
-        cancelButton.center.y = headerHeight/2
         if #available(iOS 13.4, *) {
-            cancelButton.isPointerInteractionEnabled = true
+            closeButton.isPointerInteractionEnabled = true
         }
         
         if headerConfig.showLine {
@@ -122,4 +130,5 @@ class UIFloatMenuHeaderView: UIView {
     @objc func tapClose(_ sender: UIPanGestureRecognizer) {
         NotificationCenter.default.post(name: NSNotification.Name("UIFloatMenuClose"), object: nil)
     }
+    
 }

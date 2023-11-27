@@ -7,7 +7,7 @@ import UIKit
 
 class UIFloatMenuSpacerCell: UITableViewCell {
     
-    var spacerType: spacerType!
+    var spacerType: itemSetup.spacerType!
     
     private var isReused: Bool = false
     private var isLoaded: Bool = false

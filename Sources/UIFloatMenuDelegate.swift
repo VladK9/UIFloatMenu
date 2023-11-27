@@ -8,11 +8,11 @@ import UIKit
 //MARK: - Delegates
 public struct Delegates {
     var close: UIFloatMenuCloseDelegate!
-    var textField: UIFloatMenuTextFieldDelegate!
+    var textField: UIFloatMenuInputDelegate!
 }
 
 //MARK: - TextFieldRow
-public struct TextFieldRow {
+public struct InputRow {
     let text: String!
     let identifier: String!
 }
@@ -21,20 +21,20 @@ public struct TextFieldRow {
 public protocol UIFloatMenuCloseDelegate: AnyObject {
     
     /**
-     UIFloatMenu: Called when pressed close button (or overlay) or swiped.
-     */
+    UIFloatMenu: Called when pressed close button (or overlay) or swiped.
+    */
     func UIFloatMenuDidCloseMenu()
     
 }
 
-//MARK: - UIFloatMenuTextFieldDelegate
-public protocol UIFloatMenuTextFieldDelegate: AnyObject {
+//MARK: - UIFloatMenuInputDelegate
+public protocol UIFloatMenuInputDelegate: AnyObject {
     
     /**
-     UIFloatMenu: Called when pressed action cell.
+    UIFloatMenu: Called when pressed action cell.
      
-     - Returns: Text from all textfields in menu
-     */
-    func UIFloatMenuGetTextFieldData(_ rows: [TextFieldRow])
+    - Returns: Text from all **textfield's** and **textview's** in menu
+    */
+    func UIFloatMenuGetInputData(_ rows: [InputRow])
     
 }

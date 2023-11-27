@@ -7,11 +7,11 @@ import UIKit
 
 class UIFloatMenuActionCell: UITableViewCell {
     
-    var itemColor: itemColor!
-    var itemLayout: cellLayout!
-    var itemHeight: heightStyle!
+    var itemColor: itemSetup.itemColor!
+    var itemLayout: itemSetup.cellLayout!
+    var itemHeight: itemSetup.heightStyle!
     
-    var selection: selectionConfig!
+    var selection: itemSetup.selectionConfig!
     
     var initBackColor: UIColor!
     
@@ -97,7 +97,7 @@ class UIFloatMenuActionCell: UITableViewCell {
             case .filled(_):
                 backView.alpha = 0.9
                 break
-            case .standard:
+            case .default:
                 backView.alpha = UIFloatMenuHelper.theme() == .dark ? 0.7 : 0.6
                 break
             case .custom(_, let tintColor, let backColor):
@@ -136,7 +136,7 @@ class UIFloatMenuActionCell: UITableViewCell {
         
         var top_bottom: CGFloat {
             switch itemHeight {
-            case .standard:
+            case .default:
                 return 10
             case .compact:
                 return 7
@@ -173,10 +173,10 @@ class UIFloatMenuActionCell: UITableViewCell {
                 iconImageView.image = templateImage
                 iconImageView.tintColor = color
             }
-
+            
             titleLabel.textColor = color
             subtitleLabel.textColor = color.withAlphaComponent(0.9)
-
+            
             backView.backgroundColor = color.withAlphaComponent(0.1)
             backView.layer.borderColor = color.withAlphaComponent(0.05).cgColor
             break
@@ -186,23 +186,23 @@ class UIFloatMenuActionCell: UITableViewCell {
                 iconImageView.image = templateImage
                 iconImageView.tintColor = .white
             }
-
+            
             titleLabel.textColor = .white
             subtitleLabel.textColor = UIColor.white.withAlphaComponent(0.9)
-
+            
             backView.backgroundColor = color
             backView.layer.borderColor = color.withAlphaComponent(0.05).cgColor
             break
-        case .standard:
+        case .default:
             if iconImageView.image != nil {
                 let templateImage = iconImageView.image?.withRenderingMode(.alwaysTemplate)
                 iconImageView.image = templateImage
                 iconImageView.tintColor = UIFloatMenuColors.revColor
             }
-
+            
             titleLabel.textColor = UIFloatMenuColors.revColor
             subtitleLabel.textColor = UIFloatMenuColors.revColor
-
+            
             backView.backgroundColor = UIColor.lightGray.withAlphaComponent(0.08)
             backView.layer.borderColor = UIColor.darkGray.withAlphaComponent(0.05).cgColor
             break
@@ -210,7 +210,7 @@ class UIFloatMenuActionCell: UITableViewCell {
             let image = iconColor != .clear ? iconImageView.image?.withRenderingMode(.alwaysTemplate) : iconImageView.image
             iconImageView.image = image
             iconImageView.tintColor = iconColor
-
+            
             titleLabel.textColor = textColor
             subtitleLabel.textColor = textColor.withAlphaComponent(0.9)
             

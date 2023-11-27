@@ -12,6 +12,8 @@ class UIFloatMenuCustomCell: UITableViewCell {
     
     var customView = UIView()
     
+    var config = UIFloatMenuConfig()
+    
     private var isReused: Bool = false
     private var isLoaded: Bool = false
     
@@ -29,7 +31,6 @@ class UIFloatMenuCustomCell: UITableViewCell {
     override func prepareForReuse() {
         super.prepareForReuse()
         isReused = true
-        isLoaded = true
     }
     
     // MARK: layoutSubviews
@@ -41,6 +42,13 @@ class UIFloatMenuCustomCell: UITableViewCell {
             customView.center.x = frame.width/2
             customView.center.y = frame.height/2
         }
+        
+        if isLoaded {
+            if customView.frame.size.width != frame.width-20 {
+                customView.frame.size.width = frame.width-20
+            }
+        }
+        
         isLoaded = true
     }
     

@@ -10,6 +10,61 @@ class UIFloatMenuHelper {
     
     let shared = UIFloatMenuHelper()
     
+    // MARK: - getPosition()
+    static public func getPosition(_ menuView: UIView, positions: UIFloatMenuConfig.UIFloatMenuPresentStyle, iPad_window_width: CGFloat = 0) -> CGPoint {
+        let appRect = (UIApplication.shared.windows.first(where: { $0.isKeyWindow })?.bounds)!
+        let topPadding = UIFloatMenuHelper.getPadding(.top)
+        let bottomPadding = UIFloatMenuHelper.getPadding(.bottom)
+
+        var bottomSpace: CGFloat {
+            return bottomPadding.isZero ? 15 : 30
+        }
+
+        var getPrepare: CGFloat {
+            return appRect.height + bottomPadding + topPadding + menuView.bounds.height
+        }
+
+        var getShow: CGFloat {
+            let lastHeight = menuView.bounds.height
+            return appRect.height-lastHeight-bottomSpace+(lastHeight/2)
+        }
+
+        switch positions {
+        case .center:
+            if iPad_window_width != 0 {
+                return CGPoint(x: iPad_window_width/2, y: appRect.height/2)
+            } else {
+                return CGPoint(x: appRect.width/2, y: appRect.height/2)
+            }
+        case .default:
+            if iPad_window_width != 0 {
+                return CGPoint(x: appRect.width/2, y: 0)
+            } else {
+                return CGPoint(x: appRect.width/2, y: getShow)
+            }
+        case .leftUp(let overNavBar):
+            let space: CGFloat = overNavBar ? 5 : 44
+            return CGPoint(x: (menuView.frame.size.width/2)+10, y: (menuView.frame.size.height/2)+topPadding+space)
+        case .leftDown(let overToolBar):
+            let space: CGFloat = overToolBar ? 0 : 44
+            return CGPoint(x: (menuView.frame.size.width/2)+10, y: appRect.height-(menuView.frame.size.height/2)-10-space)
+        case .rightUp(let overNavBar):
+            let space: CGFloat = overNavBar ? 5 : 44
+            if iPad_window_width != 0 {
+                return CGPoint(x: iPad_window_width-(menuView.frame.size.width/2)-10, y: (menuView.frame.size.height/2)+topPadding+space)
+            } else {
+                return CGPoint(x: appRect.width-(menuView.frame.size.width/2)-10, y: (menuView.frame.size.height/2)+topPadding+space)
+            }
+        case .rightDown(let overToolBar):
+            if iPad_window_width != 0 {
+                return CGPoint(x: iPad_window_width-(menuView.frame.size.width/2)-10, y: 0)
+            } else {
+                let space: CGFloat = overToolBar ? 0 : 44
+                return CGPoint(x: appRect.width-(menuView.frame.size.width/2)-10, y: appRect.height-(menuView.frame.size.height/2)-10-space)
+            }
+        }
+    }
+    
     //MARK: - roundedFont()
     static func roundedFont(fontSize: CGFloat, weight: UIFont.Weight) -> UIFont {
         let systemFont = UIFont.systemFont(ofSize: fontSize, weight: weight)
@@ -65,7 +120,7 @@ class UIFloatMenuHelper {
     }
     
     // MARK: - correctPosition()
-    static func correctPosition(_ position: UIFloatMenuPresentStyle) -> UIFloatMenuPresentStyle {
+    static func correctPosition(_ position: UIFloatMenuConfig.UIFloatMenuPresentStyle) -> UIFloatMenuConfig.UIFloatMenuPresentStyle {
         let device = UIDevice.current.userInterfaceIdiom
         
         if device == .pad {
@@ -186,7 +241,10 @@ final class KeyboardHelper {
     
     enum Animation {
         case keyboardWillShow
+        case keyboardDidShow
+        
         case keyboardWillHide
+        case keyboardDidHide
     }
     
     typealias HandleBlock = (_ animation: Animation, _ keyboardFrame: CGRect, _ duration: TimeInterval) -> Void
@@ -209,8 +267,18 @@ final class KeyboardHelper {
             }
         
         _ = NotificationCenter.default
+            .addObserver(forName: UIResponder.keyboardDidShowNotification, object: nil, queue: .main) { [weak self] notification in
+                self?.handle(animation: .keyboardDidShow, notification: notification)
+            }
+        
+        _ = NotificationCenter.default
             .addObserver(forName: UIResponder.keyboardWillHideNotification, object: nil, queue: .main) { [weak self] notification in
                 self?.handle(animation: .keyboardWillHide, notification: notification)
+            }
+        
+        _ = NotificationCenter.default
+            .addObserver(forName: UIResponder.keyboardDidHideNotification, object: nil, queue: .main) { [weak self] notification in
+                self?.handle(animation: .keyboardDidHide, notification: notification)
             }
     }
     
@@ -222,4 +290,14 @@ final class KeyboardHelper {
         
         handleBlock(animation, keyboardFrame, duration)
     }
+}
+
+extension UIView {
+    
+    func gestureIsEnable(_ bool: Bool) {
+        for gesture in self.gestureRecognizers ?? [] {
+            gesture.isEnabled = bool
+        }
+    }
+    
 }

@@ -6,8 +6,11 @@
 import UIKit
 
 class UIFloatMenuView: UIView, UITableViewDelegate, UITableViewDataSource, UIGestureRecognizerDelegate, UIPointerInteractionDelegate {
-        
+    
+    private var container_VC = UIViewController()
     private var source_VC = UIViewController()
+    
+    private var customView: UIView?
     
     private var config = UIFloatMenuConfig()
     private var headerConfig = UIFloatMenuHeaderConfig()
@@ -37,9 +40,16 @@ class UIFloatMenuView: UIView, UITableViewDelegate, UITableViewDataSource, UIGes
     }()
     
     //MARK: - Lifecycle
-    public init(items: [UIFloatMenuAction], vc: UIViewController, header: UIFloatMenuHeaderConfig, config: UIFloatMenuConfig, delegate: Delegates) {
+    public init(items: [UIFloatMenuAction],
+                customView: UIView? = nil,
+                vc: UIViewController, container: UIViewController,
+                header: UIFloatMenuHeaderConfig,
+                config: UIFloatMenuConfig,
+                delegate: Delegates) {
         super.init(frame: CGRect.zero)
         
+        self.customView = customView
+        self.container_VC = container
         self.source_VC = vc
         self.itemsData = items
         self.config = config
@@ -48,50 +58,95 @@ class UIFloatMenuView: UIView, UITableViewDelegate, UITableViewDataSource, UIGes
         
         backgroundColor = .clear
         
-        setupTableView()
+        let appRect = UIApplication.shared.windows[0].bounds
         
-        addSubview(tableView)
-        
-        var tableH: CGFloat {
-            let height = tableView.contentSizeHeight+(space*2)+(headerConfig.showHeader == true ? 60 : 0)
-            return setMaxHeight(height)
-        }
-        
-        let tableW: CGFloat = setMaxWidth(tableView.bounds.width)
-        
-        let device = UIDevice.current.userInterfaceIdiom
-        let width = (device == .pad ? config.viewWidth_iPad : tableW)!
-        
-        if headerConfig.showHeader {
-            let headerView = UIFloatMenuHeaderView.init(headerConfig: header, menuConfig: config)
+        if customView == nil {
+            setupTableView()
             
-            addSubview(headerView)
-            headerView.frame.origin = CGPoint(x: 0, y: 0)
-            headerView.frame.size = CGSize(width: width, height: 60)
+            addSubview(tableView)
             
-            tableView.frame = CGRect(x: 0, y: 60, width: width, height: tableH-60)
-            frame.size = CGSize(width: width, height: tableH)
-            headerView.autoresizingMask = [.flexibleWidth, .flexibleHeight]
+            var tableH: CGFloat {
+                let height = tableView.contentSizeHeight+(space*2)+(headerConfig.showHeader == true ? 60 : 0)
+                return setMaxHeight(height)
+            }
+            
+            var width: CGFloat {
+                let device = UIDevice.current.userInterfaceIdiom
+                if device == .pad {
+                    let layout = UIFloatMenuHelper.Layout.determineLayout()
+                    
+                    if layout == .iPadHalfScreen {
+                        return config.viewWidth
+                    } else if layout == .iPadOneThirdScreen {
+                        return appRect.width-30
+                    } else if layout == .iPadFullScreen {
+                        return config.viewWidth
+                    } else if layout == .iPadTwoThirdScreen {
+                        return config.viewWidth
+                    }
+                } else {
+                    return setMaxWidth(tableView.bounds.width)
+                }
+                
+                return setMaxWidth(tableView.bounds.width)
+            }
+            
+            if headerConfig.showHeader {
+                let headerView = UIFloatMenuHeaderView.init(headerConfig: header, menuConfig: config)
+                
+                addSubview(headerView)
+                headerView.frame.origin = CGPoint(x: 0, y: 0)
+                headerView.frame.size = CGSize(width: width, height: 60)
+                
+                tableView.frame = CGRect(x: 0, y: 60, width: width, height: tableH-60)
+                frame.size = CGSize(width: width, height: tableH)
+                headerView.autoresizingMask = [.flexibleWidth, .flexibleHeight]
+            } else {
+                tableView.frame = CGRect(x: 0, y: 0, width: width, height: tableH)
+                frame.size = CGSize(width: width, height: tableH)
+            }
         } else {
-            tableView.frame = CGRect(x: 0, y: 0, width: width, height: tableH)
-            frame.size = CGSize(width: width, height: tableH)
+            addSubview(customView!)
+            
+            var width: CGFloat {
+                let device = UIDevice.current.userInterfaceIdiom
+                if device == .pad {
+                    let layout = UIFloatMenuHelper.Layout.determineLayout()
+                    
+                    if layout == .iPadHalfScreen {
+                        return config.viewWidth
+                    } else if layout == .iPadOneThirdScreen {
+                        return appRect.width-30
+                    } else if layout == .iPadFullScreen {
+                        return config.viewWidth
+                    } else if layout == .iPadTwoThirdScreen {
+                        return config.viewWidth
+                    }
+                } else {
+                    return appRect.width-30
+                }
+                
+                return appRect.width-30
+            }
+            
+            if headerConfig.showHeader {
+                let headerView = UIFloatMenuHeaderView.init(headerConfig: header, menuConfig: config)
+                
+                addSubview(headerView)
+                headerView.frame.origin = CGPoint(x: 0, y: 0)
+                headerView.frame.size = CGSize(width: width, height: 60)
+                
+                customView!.frame = CGRect(x: 0, y: 60, width: width, height: customView!.frame.height)
+                frame.size = CGSize(width: width, height: customView!.frame.height+60)
+                headerView.autoresizingMask = [.flexibleWidth, .flexibleHeight]
+            } else {
+                customView!.frame = CGRect(x: 0, y: 0, width: width, height: customView!.frame.height)
+                frame.size = CGSize(width: width, height: customView!.frame.height)
+            }
         }
         
-        if config.blurBackground {
-            let blurEffect = UIBlurEffect(style: .prominent)
-            let blurView = UIVisualEffectView(effect: blurEffect)
-            blurView.frame = frame
-            blurView.autoresizingMask = [.flexibleWidth, .flexibleHeight]
-            addSubview(blurView)
-            sendSubviewToBack(blurView)
-        } else {
-            backgroundColor = UIFloatMenuColors.mainColor()
-        }
         
-        layer.cornerRadius = config.cornerRadius
         layer.masksToBounds = true
-        layer.borderWidth = 1
-        layer.borderColor = UIColor.darkGray.withAlphaComponent(0.25).cgColor
         
         let pan = UIPanGestureRecognizer(target: self, action: #selector(UIFloatMenuDrag(_:)))
         pan.maximumNumberOfTouches = 1
@@ -108,22 +163,71 @@ class UIFloatMenuView: UIView, UITableViewDelegate, UITableViewDataSource, UIGes
     //MARK: - layoutSubviews
     override func layoutSubviews() {
         super.layoutSubviews()
-        var tableH: CGFloat {
-            let height = tableView.contentSizeHeight+(space*2)+(headerConfig.showHeader == true ? 60 : 0)
-            return setMaxHeight(height)
-        }
+        let appRect = UIApplication.shared.windows[0].bounds
         
-        let tableW: CGFloat = setMaxWidth(tableView.bounds.width)
-        
-        let device = UIDevice.current.userInterfaceIdiom
-        let width = (device == .pad ? config.viewWidth_iPad : tableW)!
-        
-        if headerConfig.showHeader {
-            tableView.frame = CGRect(x: 0, y: 60, width: width, height: tableH-60)
-            frame.size = CGSize(width: width, height: tableH)
+        if customView == nil {
+            var autoWidth: CGFloat {
+                let device = UIDevice.current.userInterfaceIdiom
+                if device == .pad {
+                    let layout = UIFloatMenuHelper.Layout.determineLayout()
+                    
+                    if layout == .iPadHalfScreen {
+                        return config.viewWidth
+                    } else if layout == .iPadOneThirdScreen {
+                        return appRect.width-30
+                    } else if layout == .iPadFullScreen {
+                        return config.viewWidth
+                    } else if layout == .iPadTwoThirdScreen {
+                        return config.viewWidth
+                    }
+                } else {
+                    return setMaxWidth(tableView.bounds.width)
+                }
+                
+                return setMaxWidth(tableView.bounds.width)
+            }
+            
+            var tableH: CGFloat {
+                let height = tableView.contentSizeHeight+(space*2)+(headerConfig.showHeader == true ? 60 : 0)
+                return setMaxHeight(height)
+            }
+            
+            if headerConfig.showHeader {
+                tableView.frame = CGRect(x: 0, y: 60, width: autoWidth, height: tableH-60)
+                frame.size = CGSize(width: autoWidth, height: tableH)
+            } else {
+                tableView.frame = CGRect(x: 0, y: 0, width: autoWidth, height: tableH)
+                frame.size = CGSize(width: autoWidth, height: tableH)
+            }
         } else {
-            tableView.frame = CGRect(x: 0, y: 0, width: width, height: tableH)
-            frame.size = CGSize(width: width, height: tableH)
+            var autoWidth: CGFloat {
+                let device = UIDevice.current.userInterfaceIdiom
+                if device == .pad {
+                    let layout = UIFloatMenuHelper.Layout.determineLayout()
+                    
+                    if layout == .iPadHalfScreen {
+                        return config.viewWidth
+                    } else if layout == .iPadOneThirdScreen {
+                        return appRect.width-30
+                    } else if layout == .iPadFullScreen {
+                        return config.viewWidth
+                    } else if layout == .iPadTwoThirdScreen {
+                        return config.viewWidth
+                    }
+                } else {
+                    return setMaxWidth(tableView.bounds.width)
+                }
+                
+                return setMaxWidth(tableView.bounds.width)
+            }
+            
+            if headerConfig.showHeader {
+                customView!.frame = CGRect(x: 0, y: 60, width: autoWidth, height: customView!.frame.height)
+                frame.size = CGSize(width: autoWidth, height: customView!.frame.height+60)
+            } else {
+                customView!.frame = CGRect(x: 0, y: 0, width: autoWidth, height: customView!.frame.height)
+                frame.size = CGSize(width: autoWidth, height: customView!.frame.height)
+            }
         }
     }
     
@@ -133,7 +237,7 @@ class UIFloatMenuView: UIView, UITableViewDelegate, UITableViewDataSource, UIGes
         tableView.register(UIFloatMenuInfoCell.self, forCellReuseIdentifier: "UIFloatMenuInfoCell")
         tableView.register(UIFloatMenuTitleCell.self, forCellReuseIdentifier: "UIFloatMenuTitleCell")
         tableView.register(UIFloatMenuSpacerCell.self, forCellReuseIdentifier: "UIFloatMenuSpacerCell")
-        tableView.register(UIFloatMenuTextFieldCell.self, forCellReuseIdentifier: "UIFloatMenuTextFieldCell")
+        tableView.register(UIFloatMenuInputCell.self, forCellReuseIdentifier: "UIFloatMenuInputCell")
         tableView.register(UIFloatMenuSwitchCell.self, forCellReuseIdentifier: "UIFloatMenuSwitchCell")
         tableView.register(UIFloatMenuSegmentCell.self, forCellReuseIdentifier: "UIFloatMenuSegmentCell")
         tableView.register(UIFloatMenuHorizontalCell.self, forCellReuseIdentifier: "UIFloatMenuHorizontalCell")
@@ -208,18 +312,34 @@ class UIFloatMenuView: UIView, UITableViewDelegate, UITableViewDataSource, UIGes
             cell.spacerType = type
             
             return cell
-        case .TextFieldCell(let title, let placeholder, let isResponder, let isSecure, let content, let keyboard, _):
-            let cell = tableView.dequeueReusableCell(withIdentifier: "UIFloatMenuTextFieldCell", for: indexPath) as! UIFloatMenuTextFieldCell
-            cell.TextField.text = title
-            cell.TextField.placeholder = placeholder
+        case .InputCell(let type, let placeholder, let isResponder, _):
+            let cell = tableView.dequeueReusableCell(withIdentifier: "UIFloatMenuInputCell", for: indexPath) as! UIFloatMenuInputCell
+            cell.inputType = type
             
-            cell.TextField.isSecureTextEntry = isSecure
-            cell.TextField.textContentType = content
-            cell.TextField.keyboardType = keyboard
-            
-            if isResponder {
-                DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
-                    cell.TextField.becomeFirstResponder()
+            switch type {
+            case .textView(let text, let content, let keyboard):
+                cell.TextView.text = text
+                cell.textLayer.string = placeholder
+                cell.TextView.keyboardType = keyboard
+                cell.TextView.textContentType = content
+                
+                if isResponder {
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
+                        cell.TextView.becomeFirstResponder()
+                    }
+                }
+            case .textField(let text, let isSecure, let content, let keyboard):
+                cell.TextField.text = text
+                cell.TextField.placeholder = placeholder
+
+                cell.TextField.isSecureTextEntry = isSecure
+                cell.TextField.textContentType = content
+                cell.TextField.keyboardType = keyboard
+                
+                if isResponder {
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
+                        cell.TextField.becomeFirstResponder()
+                    }
                 }
             }
             
@@ -280,7 +400,7 @@ class UIFloatMenuView: UIView, UITableViewDelegate, UITableViewDataSource, UIGes
         
         if case .ActionCell(let selection, _, _, _, _) = row.item {
             if delegate.textField != nil {
-                delegate.textField?.UIFloatMenuGetTextFieldData(getTF_data())
+                delegate.textField?.UIFloatMenuGetInputData(getTF_data())
             }
             
             if case .multi(_, _, _, _, _) = selection {
@@ -313,15 +433,19 @@ class UIFloatMenuView: UIView, UITableViewDelegate, UITableViewDataSource, UIGes
                 row.isSelected = false
                 row.action!(row)
             } else {
-                row.action!(row)
-                if row.closeOnTap {
-                    NotificationCenter.default.post(name: NSNotification.Name("UIFloatMenuClose"), object: nil)
+                if !row.closeOnTap {
+                    row.action!(row)
+                } else {
+                    NotificationCenter.default.post(name: NSNotification.Name("UIFloatMenuClose"), object: nil,
+                                                    userInfo: ["row": row])
                 }
             }
         } else if case .CustomCell(_) = row.item {
-            row.action?(row)
-            if row.closeOnTap {
-                NotificationCenter.default.post(name: NSNotification.Name("UIFloatMenuClose"), object: nil)
+            if !row.closeOnTap {
+                row.action!(row)
+            } else {
+                NotificationCenter.default.post(name: NSNotification.Name("UIFloatMenuClose"), object: nil,
+                                                userInfo: ["row": row])
             }
         }
     }
@@ -332,7 +456,7 @@ class UIFloatMenuView: UIView, UITableViewDelegate, UITableViewDataSource, UIGes
         switch row.item {
         case .ActionCell(_, _, _, _, let heightStyle):
             switch heightStyle {
-            case .standard:
+            case .default:
                 return 57
             case .compact:
                 return 47
@@ -341,19 +465,27 @@ class UIFloatMenuView: UIView, UITableViewDelegate, UITableViewDataSource, UIGes
             }
         case .Title(_):
             return 30
-        case .Spacer(_):
+        case .Spacer(let type):
+            if case .empty(let height) = type {
+                return height
+            }
             return 12
         case .InfoCell(_, _, _):
             return 38
-        case .TextFieldCell(_, _, _, _, _, _, _):
-            return 57
+        case .InputCell(let type, _, _, _):
+            switch type {
+            case .textField(_,_,_,_):
+                return 57
+            case .textView(_,_,_):
+                return 140
+            }
         case .SwitchCell(_, _, _, _, _):
             return 40
         case .SegmentCell(_, _, _, _):
             return 50
         case .HorizontalCell(_, let heightStyle, _):
             switch heightStyle {
-            case .standard:
+            case .default:
                 return 85
             case .compact:
                 return 55
@@ -412,17 +544,22 @@ class UIFloatMenuView: UIView, UITableViewDelegate, UITableViewDataSource, UIGes
     }
     
     //MARK: - getTF_data()
-    func getTF_data() -> [TextFieldRow] {
-        var data = [TextFieldRow]()
+    func getTF_data() -> [InputRow] {
+        var data = [InputRow]()
         
         for index in 0..<itemsData.count {
             let indexPath = IndexPath(item: index, section: 0)
             let cell = tableView.cellForRow(at: indexPath)
             
-            if cell is UIFloatMenuTextFieldCell {
-                let cell = tableView.cellForRow(at: indexPath) as! UIFloatMenuTextFieldCell
-                if case .TextFieldCell(_, _, _, _, _, _, let identifier) = itemsData[index].item {
-                    data.append(.init(text: cell.TextField.text, identifier: identifier))
+            if cell is UIFloatMenuInputCell {
+                let cell = tableView.cellForRow(at: indexPath) as! UIFloatMenuInputCell
+                if case .InputCell(let type, _, _, let identifier) = itemsData[index].item {
+                    switch type {
+                    case .textField(_,_,_,_):
+                        data.append(.init(text: cell.TextField.text, identifier: identifier))
+                    case .textView(_,_,_):
+                        data.append(.init(text: cell.TextView.text, identifier: identifier))
+                    }
                 }
             }
         }
@@ -458,26 +595,29 @@ class UIFloatMenuView: UIView, UITableViewDelegate, UITableViewDataSource, UIGes
     
     // MARK: - panChanged()
     private func panChanged(_ gesture: UIPanGestureRecognizer) {
-        let view = gesture.view!
-        let translation = gesture.translation(in: gesture.view)
-        
-        var translationAmount = translation.y >= 0 ? translation.y : -pow(abs(translation.y), 0.55)
-        let rubberBanding = !tableView.isScrollEnabled
-        if !rubberBanding && translationAmount < 0 { translationAmount = 0 }
-        
-        view.transform = CGAffineTransform(translationX: 0, y: translationAmount)
+        if let containerView = container_VC.view.viewWithTag(UIFloatMenuID.containerViewID) {
+            let translation = gesture.translation(in: gesture.view)
+            
+            var translationAmount = translation.y >= 0 ? translation.y : -pow(abs(translation.y), 0.55)
+            let rubberBanding = !tableView.isScrollEnabled
+            if !rubberBanding && translationAmount < 0 { translationAmount = 0 }
+            
+            containerView.transform = CGAffineTransform(translationX: 0, y: translationAmount)
+        }
     }
     
     // MARK: - panEnded()
     private func panEnded(_ gesture: UIPanGestureRecognizer, point: CGFloat) {
-        let velocity = gesture.velocity(in: gesture.view).y
-        let view = gesture.view!
-        if ((view.frame.origin.y+view.frame.height/1.8) >= point) || (velocity > 200) {
-            NotificationCenter.default.post(name: NSNotification.Name("UIFloatMenuClose_all"), object: nil)
-        } else {
-            UIView.animate(withDuration: 0.2, animations: {
-                self.transform = .identity
-            })
+        if let containerView = container_VC.view.viewWithTag(UIFloatMenuID.containerViewID) {
+            let velocity = gesture.velocity(in: gesture.view).y
+            
+            if ((containerView.frame.origin.y+containerView.frame.height/1.8) >= point) || (velocity > 200) {
+                UIFloatMenu.closeAll()
+            } else {
+                UIView.animate(withDuration: 0.2, animations: {
+                    containerView.transform = .identity
+                })
+            }
         }
     }
     

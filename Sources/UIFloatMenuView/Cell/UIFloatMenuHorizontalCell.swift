@@ -7,10 +7,12 @@ import UIKit
 
 class HorizontalView: UIView, UICollectionViewDelegate, UICollectionViewDataSource, UICollectionViewDelegateFlowLayout, UIPointerInteractionDelegate {
     
+    var updatedWidth: CGFloat!
+    
     var items = [UIFloatMenuAction]()
     var viewSize = CGSize()
-    var heightStyle: h_heightStyle!
-    var layout: h_cellLayout!
+    var heightStyle: itemSetup.h_heightStyle!
+    var layout: itemSetup.h_cellLayout!
     
     let cellSpacing: CGFloat = 5
     var cellInsets: UIEdgeInsets = UIEdgeInsets(top: 5, left: 10, bottom: 5, right: 10)
@@ -146,7 +148,7 @@ class HorizontalView: UIView, UICollectionViewDelegate, UICollectionViewDataSour
     }
     
     //MARK: - init
-    public init(items: [UIFloatMenuAction], viewSize: CGSize, height: h_heightStyle, layout: h_cellLayout) {
+    public init(items: [UIFloatMenuAction], viewSize: CGSize, height: itemSetup.h_heightStyle, layout: itemSetup.h_cellLayout) {
         super.init(frame: CGRect.zero)
         
         self.items = items
@@ -170,8 +172,20 @@ class HorizontalView: UIView, UICollectionViewDelegate, UICollectionViewDataSour
     //MARK: - layoutSubviews
     override func layoutSubviews() {
         super.layoutSubviews()
-        frame.size = viewSize
-        itemsView.frame.size = viewSize
+        let appRect = UIApplication.shared.windows[0].bounds
+        
+        if updatedWidth == nil {
+            frame.size = viewSize
+            itemsView.frame.size = viewSize
+        } else {
+            viewSize = CGSize(width: updatedWidth, height: viewSize.height)
+            
+            DispatchQueue.main.async {
+                self.frame.size = CGSize(width: self.updatedWidth, height: self.viewSize.height)
+                self.itemsView.frame.size = CGSize(width: self.updatedWidth, height: self.viewSize.height)
+                self.itemsView.collectionViewLayout.invalidateLayout()
+            }
+        }
     }
     
     //MARK: - setupView
@@ -220,10 +234,10 @@ class HorizontalView: UIView, UICollectionViewDelegate, UICollectionViewDataSour
 //MARK: - HorizontalItemCell
 class HorizontalItemCell: UICollectionViewCell {
     
-    var heightStyle: h_heightStyle!
-    var layout: h_cellLayout!
+    var heightStyle: itemSetup.h_heightStyle!
+    var layout: itemSetup.h_cellLayout!
     
-    var selection: selectionConfig!
+    var selection: itemSetup.selectionConfig!
     
     private var contentStackView: UIStackView = UIStackView()
     
@@ -378,8 +392,8 @@ class UIFloatMenuHorizontalCell: UITableViewCell {
     
     var items = [UIFloatMenuAction]()
     var viewSize: CGSize!
-    var heightStyle: h_heightStyle!
-    var layout: h_cellLayout!
+    var heightStyle: itemSetup.h_heightStyle!
+    var layout: itemSetup.h_cellLayout!
     
     private var isReused: Bool = false
     private var isLoaded: Bool = false
@@ -397,16 +411,16 @@ class UIFloatMenuHorizontalCell: UITableViewCell {
     override func prepareForReuse() {
         super.prepareForReuse()
         isReused = true
-        isLoaded = true
     }
     
     override func layoutSubviews() {
         super.layoutSubviews()
-        if !isReused && isLoaded == false {
+        if !isReused && !isLoaded {
             let h_view = HorizontalView.init(items: items, viewSize: viewSize, height: heightStyle, layout: layout)
             contentView.addSubview(h_view)
             h_view.frame.origin = .zero
         }
+        
         isLoaded = true
     }
     

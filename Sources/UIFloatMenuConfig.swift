@@ -5,75 +5,77 @@
 
 import UIKit
 
-//MARK: - presentationStyle
-/**
- UIFloatMenu: Present styles.
- */
-public enum UIFloatMenuPresentStyle {
-    
-    /**
-    UIFloatMenu: Located in center of window
-    */
-    case center
-    
-    /**
-    UIFloatMenu: Presented from buttom
-    */
-    case `default`
-    
-    /**
-    UIFloatMenu: Located in left up corner
-     
-     overToolBar = **false**
-    */
-    case leftUp(overNavBar: Bool = false)
-    
-    /**
-    UIFloatMenu: Located in left down corner
-     
-     overToolBar = **true**
-    */
-    case leftDown(overToolBar: Bool = true)
-    
-    
-    /**
-    UIFloatMenu: Located in right up corner
-     
-     overToolBar = **false**
-    */
-    case rightUp(overNavBar: Bool = false)
-    
-    /**
-    UIFloatMenu: Located in right down
-     
-     overToolBar = **true**
-    */
-    case rightDown(overToolBar: Bool = true)
-}
-
 // MARK: - UIFloatMenuConfig
 public struct UIFloatMenuConfig {
     
+    //MARK: - presentationStyle
     /**
-     UIFloatMenu: Corner radius of menu
+     UIFloatMenu: Present styles.
+     */
+    public enum UIFloatMenuPresentStyle {
+        
+        /**
+        UIFloatMenu: Located in center of window
+        */
+        case center
+        
+        /**
+        UIFloatMenu: Presented from buttom
+        */
+        case `default`
+        
+        /**
+        UIFloatMenu: Located in left up corner
+         
+        overToolBar = **false**
+        */
+        case leftUp(overNavBar: Bool = false)
+        
+        /**
+        UIFloatMenu: Located in left down corner
+         
+        overToolBar = **true**
+        */
+        case leftDown(overToolBar: Bool = true)
+        
+        
+        /**
+        UIFloatMenu: Located in right up corner
+         
+        overToolBar = **false**
+        */
+        case rightUp(overNavBar: Bool = false)
+        
+        /**
+        UIFloatMenu: Located in right down
+         
+        overToolBar = **true**
+        */
+        case rightDown(overToolBar: Bool = true)
+    }
+    
+    /**
+    UIFloatMenu: Corner radius of menu
      
-     Default: **12**.
+    > Default: **12**.
     */
     public var cornerRadius: CGFloat!
     
     /**
-     UIFloatMenu: Width of menu for iPad (for iPhone is always **window.width-30**)
+    UIFloatMenu: Width of menu for iPad (for iPhone is always **window.width-30**)
      
-     Default: **400**.
+    > Default: **400**.
     */
-    public var viewWidth_iPad: CGFloat!
+    public var viewWidth: CGFloat!
     
     /**
-     UIFloatMenu: Add blur to background
+    UIFloatMenu: Add blur to background
      
-     Default: **false**.
+    > Default: **false**.
     */
     public var blurBackground: Bool
+    
+    public var blurStyle: UIBlurEffect.Style
     
     /**
     UIFloatMenu: Presentation styles
@@ -85,19 +87,26 @@ public struct UIFloatMenuConfig {
     - Parameter rightUp: Located in right up corner
     - Parameter rightDown: Located in right down corner
      
-     Default: **.default**.
+    > Default: **.default** .
     */
     public var presentation: UIFloatMenuPresentStyle!
     
+    public var dragEnable: Bool!
+    
     public init(cornerRadius: CGFloat = 12,
                 blurBackground: Bool = false,
+                blurStyle: UIBlurEffect.Style = .prominent,
                 presentation: UIFloatMenuPresentStyle = .default,
-                viewWidth_iPad: CGFloat = 400) {
+                dragEnable: Bool = true,
+                viewWidth: CGFloat = 345) {
         self.cornerRadius = cornerRadius
         self.blurBackground = blurBackground
-        self.presentation = presentation
+        self.blurStyle = blurStyle
         
-        self.viewWidth_iPad = viewWidth_iPad
+        self.presentation = presentation
+        self.dragEnable = dragEnable
+        
+        self.viewWidth = viewWidth
     }
     
 }
@@ -106,44 +115,52 @@ public struct UIFloatMenuConfig {
 public struct UIFloatMenuHeaderConfig {
     
     /**
-     UIFloatMenu: Show header
+    UIFloatMenu: Show header
      
-     Default: **true**.
+    > Default: **true**.
     */
     public var showHeader: Bool
     
     /**
-     UIFloatMenu: Title of header
+    UIFloatMenu: Title of header
     */
     public var title: String
     
     /**
-     UIFloatMenu: Subtitle of header (optional)
+    UIFloatMenu: Subtitle of header (optional)
     */
     public var subtitle: String?
     
     /**
-     UIFloatMenu: Show line under header
+    UIFloatMenu: Show line under header
      
-     Default: **true**.
+    > Default: **true**.
     */
     public var showLine: Bool
     
     /**
-     UIFloatMenu: **Left** and **Right** insets for line
+    UIFloatMenu: Show close button
      
-     Default: **15**.
+    > Default: **true**.
+    */
+    public var showButton: Bool
+    
+    /**
+    UIFloatMenu: **Left** and **Right** insets for line
+     
+    > Default: **15**.
     */
     public var lineInset: CGFloat
     
     public init(showHeader: Bool = true, title: String = "", subtitle: String? = "",
-                showLine: Bool = true, lineInset: CGFloat = 15) {
+                showLine: Bool = true, showButton: Bool = true, lineInset: CGFloat = 15) {
         self.showHeader = showHeader
         
         self.title = title
         self.subtitle = subtitle
         
         self.showLine = showLine
+        self.showButton = showButton
         self.lineInset = lineInset
     }
     
@@ -175,8 +192,9 @@ class UIFloatMenuID {
     
     static let backViewID = 100010001
     static let containerViewID = 11223300332211
+    static let indicatorID = 1000030000
     
-    static func genUUID(_ count: Int) -> Int {
+    static func genID(_ count: Int) -> Int {
         if count == 0 {
             return backViewID
         }
@@ -189,7 +207,6 @@ class UIFloatMenuColors {
     
     let shared = UIFloatMenuColors()
     
-    //static let mainColor = UIColor(named: "UIMenuMainColor")
     static let revColor = UIColor(named: "UIMenuRevColor")
     
     static func mainColor() -> UIColor {

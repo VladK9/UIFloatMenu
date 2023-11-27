@@ -11,6 +11,9 @@ class UIFloatMenuSegmentCell: UITableViewCell {
     
     var items = [Any]()
     
+    private var isReused: Bool = false
+    private var isLoaded: Bool = false
+    
     lazy var titleLabel: UILabel = {
         let label = UILabel()
         label.textColor = UIFloatMenuColors.revColor
@@ -38,6 +41,7 @@ class UIFloatMenuSegmentCell: UITableViewCell {
     
     override func prepareForReuse() {
         super.prepareForReuse()
+        isReused = true
         selectedIndex = segmentView.selectedSegmentIndex
     }
     
@@ -48,23 +52,27 @@ class UIFloatMenuSegmentCell: UITableViewCell {
             segmentView.selectedSegmentIndex = selectedIndex
         }
         
-        if titleLabel.text != "" {
-            contentStackView.addArrangedSubview(titleLabel)
-            contentStackView.spacing = 5
-        } else {
-            contentStackView.spacing = 0
+        if !isReused && !isLoaded {
+            if titleLabel.text != "" {
+                contentStackView.addArrangedSubview(titleLabel)
+                contentStackView.spacing = 5
+            } else {
+                contentStackView.spacing = 0
+            }
+            contentStackView.addArrangedSubview(segmentView)
+            contentStackView.axis = .horizontal
+            contentStackView.distribution = .fillProportionally
+            
+            NSLayoutConstraint.activate([
+                contentStackView.topAnchor.constraint(equalTo: topAnchor, constant: 4),
+                contentStackView.leadingAnchor.constraint(equalTo: leadingAnchor, constant: 12),
+                contentStackView.bottomAnchor.constraint(equalTo: bottomAnchor, constant: -4),
+                contentStackView.trailingAnchor.constraint(equalTo: trailingAnchor, constant: -12)
+            ])
+            contentStackView.translatesAutoresizingMaskIntoConstraints = false
         }
-        contentStackView.addArrangedSubview(segmentView)
-        contentStackView.axis = .horizontal
-        contentStackView.distribution = .fillProportionally
-
-        NSLayoutConstraint.activate([
-            contentStackView.topAnchor.constraint(equalTo: topAnchor, constant: 4),
-            contentStackView.leadingAnchor.constraint(equalTo: leadingAnchor, constant: 12),
-            contentStackView.bottomAnchor.constraint(equalTo: bottomAnchor, constant: -4),
-            contentStackView.trailingAnchor.constraint(equalTo: trailingAnchor, constant: -12)
-        ])
-        contentStackView.translatesAutoresizingMaskIntoConstraints = false
+        
+        isLoaded = true
     }
     
 }
