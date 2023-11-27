@@ -9,6 +9,7 @@
 - [Features](#features)
 - [Installation](#installation)
 - [Usage](#usage)
+- [Functions](#functions)
 - [Delegate](#delegate)
 
 ## Features
@@ -16,58 +17,98 @@
 - Highly customizable
    - support dark/light theme
    - corner radius
-   - blured background
+   - blurred background
    - width (iPad)
    - various positions
 
-   ### Item config
+   ## **Cell type's**
    
-   Item type
-   ```swift
-   - ActionCell
-   - Title
-   - Spacer
-   - InfoCell
-   - TextFieldCell
-   - SwitchCell
-   - SegmentCell
-   - CustomCell
-   ```
+   #### - ActionCell
    
-   Action item color
+   ##### Single action
    ```swift
-   - standard
-   - clear
-   - filled
-   - tinted
-   - custom
+   .init(item: .ActionCell(selection: .default(icon: UIImage(systemName: "star"), title: "Title")), action: { action in
+       print("item Unstar")
+   })
    ```
     
-   Action item Layout
+   ##### Double action
+   ```swift
+   .init(item: .ActionCell(selection: .multi(isSelected: true,
+                            selectedIcon: UIImage(systemName: "star.slash"), selectedTitle: "Unstar",
+                            defaultIcon: UIImage(systemName: "star"), defaultTitle: "Star")), 
+          action: { action in
+        if action.isSelected ?? false {
+            print("item Unstar")
+        } else {
+            print("item Star")
+        }
+   })
+   ```
+   
+   ##### Action item color
+   ```swift
+   - default
+   - clear
+   - filled parameters: color
+   - tinted parameters: color
+   - custom parameters: color, textColor, backColor
+   ```
+   
+   ##### Action item Layout
    ```swift
    - Icon_Title (Icon left, title right)
    - Title_Icon (Title left, Icon right)
    ```
    
-   Action item height
+   ##### Action item height
    ```swift
    - compact
-   - standard
+   - default
    - big
+   ```
+    
+   #### - TitleCell
+   ```swift
+   .init(item: .Title("Title"))
+   ```
+   
+   #### - SpacerCell
+   ```swift
+   .init(item: .Spacer(type: .empty))
+   .init(item: .Spacer(type: .line())) parameters: color, inset
+   .init(item: .Spacer(type: .dashedLine())) parameters: color
+   .init(item: .Spacer(type: .divider))
+   ```
+   
+   #### - InputCell
+   ```swift
+   .init(item: .InputCell(type: .textField(), placeholder: "Login", identifier: "Login"))
+   .init(item: .InputCell(type: .textView(), placeholder: "Description", identifier: "Description"))
+   
+   textField parameters: text, isSecure, content, keyboard
+   textView parameters: text, content, keyboard
+   ```
+   
+   #### - SwitchCell
+   ```swift
+   .init(item: .SwitchCell(icon: UIImage(systemName: "bookmark")!, title: "Switch 1", action: #selector(switchAction)))
+   ```
+   
+   #### - SegmentCell
+   ```swift
+   .init(item: .SegmentCell(items: ["Item 1", UIImage(systemName: "bookmark")!, "Item 3"], selected: 1, action: #selector(segmentAction)))
+   ```
+   
+   #### - CustomCell
+   ```swift
+   .init(item: .CustomCell(view: CustomViewRow(title: "Custom rows", subtitle: "View custom rows", icon: UIImage(systemName: "tablecells")!)), action: { _ in }
    ```
    
    Horizontal Action item height
    ```swift
    - compact
-   - standard
-   ```
-   
-   Spacer type
-   ```swift
-   - empty
-   - line
-   - dashedLine
-   - divider
+   - default
    ```
 
 ## Installation
@@ -76,24 +117,7 @@ Put `Sources` folder in your Xcode project. Make sure to enable `Copy items if n
 ## Usage
 
 ```swift
-let actions: [UIFloatMenuAction] = [
-    .init(item: .Title("Title")),
-    .init(item: .SegmentCell(items: ["Item 1", UIImage(systemName: "bookmark")!, "Item 3"], selected: 1, action: #selector(segmentAction))),
-    .init(item: .SwitchCell(icon: UIImage(systemName: "bookmark")!, title: "Switch 1", action: #selector(switchAction))),
-    .init(item: .InfoCell(icon: UIImage(systemName: "questionmark.square")!, title: "Data title", label: .config(fontSize: 15, fontWeight: .semibold))),
-    .init(item: .Spacer(type: .divider)),
-    .init(item: .Title("Title")),
-    .init(item: .ActionCell(icon: UIImage(systemName: "arrow.down.square.fill")!, title: "Title", layout: .Icon_Title), itemColor: .tinted(.systemBlue), action: { _ in
-        print("Action")
-    }),
-    .init(item: .Spacer(type: .line())),
-    .init(item: .ActionCell(icon: UIImage(systemName: "arrow.right.square.fill")!, title: "Title", subtitle: "Test subtitle", layout: .Icon_Title), itemColor: .filled(.systemPurple), action: { _ in
-        print("Action")
-    }),
-    .init(item: .HorizontalCell(items: h_actions, height: .standard)),
-    .init(item: .CustomCell(view: CustomViewRow(title: "Custom rows", subtitle: "View custom rows", icon: UIImage(systemName: "tablecells")!)), action: { _ in
-    })
-]
+let actions: [UIFloatMenuAction] = []
         
 let menu = UIFloatMenu.setup(actions: actions)
 menu.header.title = "UIFloatMenu title"
@@ -107,6 +131,32 @@ menu.config.viewWidth_iPad = 350
 menu.config.presentation = .default
 menu.delegate.close = self
 menu.show(self)
+```
+
+## Functions
+
+**Show next view with animation**
+```swift
+let header = UIFloatMenuHeaderConfig(title: "Activity", showLine: true)
+UIFloatMenu.showNext(actions: [], presentation: .center, header: header)
+```
+
+**Display indicator**
+```swift
+UIFloatMenu.displayIndicator(text: "Loading...", presentation: .rightUp(overNavBar: true))
+
+//If success show next
+UIFloatMenu.showNext(actions: [], presentation: .rightUp(overNavBar: true), header: header)
+
+//If error stop indicator and show previous view
+UIFloatMenu.stopIndicator()
+```
+
+**Show alert**
+```swift
+let alert = UIAlertController(title: "Delete", message: "message", preferredStyle: .alert)
+alert.addAction(UIAlertAction(title: "Cancel", style: .cancel))
+UIFloatMenuHelper.showAlert(alert)
 ```
 
 ## Delegate
@@ -123,14 +173,14 @@ func UIFloatMenuDidCloseMenu() {
 }
 ```
 
-To get `UITextField data`, set the delegate with protocol `UIFloatMenuTextFieldDelegate`:
+To get `UITextField` or `UITextView data`, set the delegate with protocol `UIFloatMenuTextFieldDelegate`:
 
 ```swift
-menu.delegate.textField = self
+menu.delegate.input = self
 ```
 
 ```swift
-func UIFloatMenuGetTextFieldData(_ rows: [TextFieldRow]) {
+func UIFloatMenuGetInputData(_ rows: [InputRow]) {
     let login = UIFloatMenuHelper.find(rows, by: "Login")
     let password = UIFloatMenuHelper.find(rows, by: "Password")
 
