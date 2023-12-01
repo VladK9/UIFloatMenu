@@ -123,10 +123,10 @@ class UIFloatMenuView: UIView, UITableViewDelegate, UITableViewDataSource, UIGes
                         return config.viewWidth
                     }
                 } else {
-                    return appRect.width-30
+                    return setMaxWidth(customView.bounds.width)
                 }
                 
-                return appRect.width-30
+                return setMaxWidth(customView.bounds.width)
             }
             
             if headerConfig.showHeader {
@@ -215,10 +215,10 @@ class UIFloatMenuView: UIView, UITableViewDelegate, UITableViewDataSource, UIGes
                         return config.viewWidth
                     }
                 } else {
-                    return setMaxWidth(tableView.bounds.width)
+                    return setMaxWidth(customView.bounds.width)
                 }
                 
-                return setMaxWidth(tableView.bounds.width)
+                return setMaxWidth(customView.bounds.width)
             }
             
             if headerConfig.showHeader {

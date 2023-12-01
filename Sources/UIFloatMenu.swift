@@ -15,6 +15,7 @@ class UIFloatMenu {
     
     let shared = UIFloatMenu()
     
+    //MARK: - setup
     static public func setup(type: UIFloatMenu_viewType) -> UIFloatMenuController {
         let vc = UIFloatMenuController()
         switch type {
@@ -46,6 +47,7 @@ class UIFloatMenu {
     // Animation duration
     static private var animationDuration: TimeInterval = 0.4
     
+    // Display ActivityIndicator
     static public var displayActivityIndicator: Bool = false
     
     // Queue

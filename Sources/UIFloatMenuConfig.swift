@@ -75,6 +75,11 @@ public struct UIFloatMenuConfig {
     */
     public var blurBackground: Bool
     
+    /**
+    UIFloatMenu: Blur effect style
+     
+    > Default: **prominent**.
+    */
     public var blurStyle: UIBlurEffect.Style
     
     /**

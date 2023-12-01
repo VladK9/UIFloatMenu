@@ -143,6 +143,7 @@ class UIFloatMenuHelper {
         }
     }
     
+    // MARK: - getTopVC
     static func getTopVC() -> UIViewController {
         var topController: UIViewController {
             let keyWindow = UIApplication.shared.windows.filter( {$0.isKeyWindow} ).first
@@ -157,6 +158,7 @@ class UIFloatMenuHelper {
         return topController
     }
     
+    // MARK: - showAlert
     static func showAlert(_ alert: UIAlertController) {
         var topController: UIViewController {
             let keyWindow = UIApplication.shared.windows.filter( {$0.isKeyWindow} ).first
@@ -172,7 +174,8 @@ class UIFloatMenuHelper {
         topController.present(alert, animated: true, completion: nil)
     }
     
-    static func find(_ rows: [TextFieldRow], by identifier: String) -> String {
+    // MARK: - find
+    static func find(_ rows: [InputRow], by identifier: String) -> String {
         if let index = rows.firstIndex(where: { $0.identifier == identifier}) {
             return rows[index].text
         }
@@ -294,6 +297,7 @@ final class KeyboardHelper {
 
 extension UIView {
     
+    // MARK: - gestureIsEnable
     func gestureIsEnable(_ bool: Bool) {
         for gesture in self.gestureRecognizers ?? [] {
             gesture.isEnabled = bool

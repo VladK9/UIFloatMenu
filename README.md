@@ -17,8 +17,7 @@
 - Highly customizable
    - support dark/light theme
    - corner radius
-   - blurred background
-   - width (iPad)
+   - blurred background (with blur styles)
    - various positions
 
    ## **Cell type's**
@@ -118,16 +117,18 @@ Put `Sources` folder in your Xcode project. Make sure to enable `Copy items if n
 
 ```swift
 let actions: [UIFloatMenuAction] = []
-        
-let menu = UIFloatMenu.setup(actions: actions)
+
+//let custom_menu = UIFloatMenu.setup(type: .custom(view: CustomView))
+let menu = UIFloatMenu.setup(type: .actions(actions))
 menu.header.title = "UIFloatMenu title"
 menu.header.subtitle = "UIFloatMenu subtitle"
+menu.header.showButton = true
 menu.header.showHeader = true
 menu.header.showLine = true
 menu.header.lineInset = 15
 menu.config.cornerRadius = 12
 menu.config.blurBackground = true
-menu.config.viewWidth_iPad = 350
+menu.config.blurStyle = .systemMaterial
 menu.config.presentation = .default
 menu.delegate.close = self
 menu.show(self)
@@ -138,17 +139,18 @@ menu.show(self)
 **Show next view with animation**
 ```swift
 let header = UIFloatMenuHeaderConfig(title: "Activity", showLine: true)
-UIFloatMenu.showNext(actions: [], presentation: .center, header: header)
+UIFloatMenu.showNext(type: .custom(view: CustomView), header: header, presentation: .center) // custom view
+UIFloatMenu.showNext(type: .actions([]), header: header, presentation: .center) // items
 ```
 
 **Display indicator**
 ```swift
 UIFloatMenu.displayIndicator(text: "Loading...", presentation: .rightUp(overNavBar: true))
 
-//If success show next
+//If success, show next
 UIFloatMenu.showNext(actions: [], presentation: .rightUp(overNavBar: true), header: header)
 
-//If error stop indicator and show previous view
+//If error, stop indicator and show previous view
 UIFloatMenu.stopIndicator()
 ```
 
